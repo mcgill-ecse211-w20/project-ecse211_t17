@@ -74,6 +74,11 @@ public class Odometer {
   private static final long ODOMETER_PERIOD = 20;
   
   /**
+   * Records the last gridpoint the device localized at, in integer coordinates
+   */
+  public int[] gridpoint = {0,0};
+  
+  /**
    * Default constructor for this class so it returns a singleton
    */
   private Odometer() {

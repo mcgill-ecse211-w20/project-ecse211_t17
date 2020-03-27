@@ -1,5 +1,9 @@
 package ca.mcgill.ecse211.project;
 
+import lejos.hardware.ev3.LocalEV3;
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.port.MotorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
 
 /**
  * This class is used to define static resources in one place for easy access and to avoid cluttering the rest of the
@@ -42,6 +46,11 @@ public class Resources {
    * The speed at which the robot moves forward in degrees par second left.
    */
   public static final int FORWARD_SPEED_LEFT = (int) (FORWARD_SPEED_RIGHT * RATIO);
+  
+  /**
+   * The speed at which the robot moves when rotating in degrees per second.
+   */
+  public static final int ROTATE_SPEED = 90;
  
   /**
    * The motor acceleration in degrees per second squared.
@@ -84,11 +93,53 @@ public class Resources {
   public static Odometer odometer = Odometer.getOdometer();
   
   /**
-   * The Movement
+   * Creates the robot instance
    */
-  public static Movement movement;
+  public static Robot robot = Robot.getRobot();
   
-  public static void setMovement(UltrasonicSensor uss) { Resources.movement = Movement.GetMovement(uss); }
+  
+  /**
+   * The left motor.
+   */
+  public static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(MotorPort.A);
+
+  /**
+   * The right motor.
+   */
+  public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(MotorPort.D);
+  
+  /**
+   * The right light sensor for localization
+   */
+  public static final EV3ColorSensor LIGHT_SENSOR_RIGHT =
+      new EV3ColorSensor(LocalEV3.get().getPort("S3"));
+  
+  /**
+   * The left light sensor for localization
+   */
+  public static final EV3ColorSensor LIGHT_SENSOR_LEFT = 
+      new EV3ColorSensor(LocalEV3.get().getPort("S4"));
+  
+  /**
+   * The light sensor for color detection
+   */
+  public static final EV3ColorSensor LIGHT_SENSOR_COLOR =
+       new EV3ColorSensor(LocalEV3.get().getPort("S2"));
+  
+  /**
+   * Instantiation of sampler object for the right light sensor
+   */
+  public static final LightSensor rightLightSensor = new LightSensor(LIGHT_SENSOR_RIGHT, "Red");
+  
+  /**
+   * Instantiation of sampler object for the left light sensor
+   */
+  public static final LightSensor leftLightSensor = new LightSensor(LIGHT_SENSOR_LEFT, "Red");
+  
+  /**
+   * Instantiation of sampler object for the color detection light sensor
+   */
+  public static final LightSensor colorLightSensor = new LightSensor(LIGHT_SENSOR_COLOR, "RGB");
   
   
   

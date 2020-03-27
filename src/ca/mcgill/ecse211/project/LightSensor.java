@@ -1,8 +1,11 @@
 package ca.mcgill.ecse211.project;
 
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.SensorModes;
+import lejos.robotics.SampleProvider;
 
 /**
- * Light Sensor reference to the localization
+ * LightSensor initializes the sample providers in order to read the data from each physical sensors.
  * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
@@ -13,25 +16,52 @@ package ca.mcgill.ecse211.project;
  */
 public class LightSensor {
   
+  /**
+   * Refers to the corresponding physical sensor
+   */
+  public EV3ColorSensor sensor;
+  
   //Initialize variables for the colour sensor
+  private SensorModes sensorModes;
+  private SampleProvider sampleProvider;
   private float[] colourSensorValues;
   
-  //Private objects to store odometer and movement
-  private Odometer odometer;
+  /**
+   * The color read by the color sensor
+   */
+  public float color;
   
   /**
-   * Constructor that takes nothing as input and initializes the odometer and movement objects using the objects stored in the resources
-   * Also initializes the Light sensor and the array with the values
+   * Constructor to associate physical sensor to the corresponding sampling object 
+   * 
+   * @param EV3ColorSensor sensor - the physical entity of the sensor
+   * @param String mode - the mode in which the sampling should be done
+   * 
    */
-  public LightSensor() {
-    
+  public LightSensor(EV3ColorSensor sensor, String mode) {
+    this.sensor = sensor;
+    this.sensorModes = this.sensor;
+    this.sampleProvider = this.sensorModes.getMode(mode);
+    this.colourSensorValues = new float[this.sensorModes.sampleSize()];
   }
   
+  
   /**
-   * Reorientation of the robot, i.e. fixing position AND angles
+   * Reads the color from the Color Sensor
    */
-  public void localize() {
+  public void readColorSampleRed() {
+    this.sampleProvider.fetchSample(colourSensorValues, 0);
+    color = colourSensorValues[0] * 100;
     
+   }
+  
+  /**
+   * Check whether a line is detected or not given a float sensor value
+   * 
+   * @param colorSensorValue from a EV3ColorSensor
+   */
+  public boolean lineDetected() {
+    return this.color < 0.35;
   }
   
   /**

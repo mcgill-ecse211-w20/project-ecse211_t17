@@ -39,7 +39,7 @@ public class Main {
    *
    * @param time in ms for how long the Thread should sleep for
    */
-  public static void SleepFor(double time) {
+  public static void sleepFor(double time) {
     
   }
 }
