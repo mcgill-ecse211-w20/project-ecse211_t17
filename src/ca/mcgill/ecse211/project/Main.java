@@ -1,5 +1,7 @@
 package ca.mcgill.ecse211.project;
 
+import lejos.hardware.Button;
+
 //import static ca.mcgill.ecse211.project.Resources.*;
 
 /**
@@ -22,24 +24,39 @@ public class Main {
    */
   public static void main(String[] args) {
     
+    int click;
+    
+    //start download wifi class 
+    Resources.odometer.start();
+    
+    click = Button.waitForAnyPress();
+    
+    //Set for debugging purposes
+    while (click != Button.ID_ESCAPE) {
+      if (click == Button.ID_ENTER) {
+        Robot.initialize();
+        Robot.beeps(3);
+        Robot.toSearch();
+        Robot.beeps(3);
+        Robot.search();
+        Robot.toHome();
+        Robot.beeps(5);
+      }
+    }
+    System.exit(0);
   }
   
-  /**
-   * Method to initially start the robot with input checking to make sure the right button is pressed.
-   * Different methods useful for debugging: testing specific parts of the code
-   * 
-   * @return Button_ID according to what was clicked
-   */
-  private static int waitForInitialInput() {
-    return 1;
-  }
   
   /**
    * Make the current thread sleep for an amount of time
    *
    * @param time in ms for how long the Thread should sleep for
    */
-  public static void sleepFor(double time) {
-    
+  public static void sleepFor(long time) {
+   try {
+     Thread.sleep(time);
+   } catch (InterruptedException e) {
+     
+   }
   }
 }

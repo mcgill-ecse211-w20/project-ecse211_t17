@@ -4,6 +4,7 @@ import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.EV3UltrasonicSensor;
 
 /**
  * This class is used to define static resources in one place for easy access and to avoid cluttering the rest of the
@@ -86,7 +87,70 @@ public class Resources {
    * Offset of the sensor
    */
   public static final double SENSOR_OFFSET = 14.7;
+  
+  /**
+   * Distance between us sensor and wheel axle
+   */
+  public static final double US_SENSOR_DISTANCE = 2.1;
+  
+  /**
+   * Distance where an object will be detected
+   */
+  public static final double DETECTION_DISTANCE = 3.5;
 
+  public enum Team { GREEN, RED };
+  /**
+   * Team storing details
+   */
+  public static Team team = null;
+  
+  /**
+   * Starting corner number
+   */
+  public static int corner = -1;
+  
+  /**
+   * Tunnel lower left coordinates
+   */
+  public static int TN_LL_x = -1;
+  public static int TN_LL_y = -1;
+  
+  /**
+   * Tunnel upper right coordinates
+   */
+  public static int TN_UR_x = -1;
+  public static int TN_UR_y = -1;
+  
+  /**
+   * Home area lower left coordinates
+   */
+  public static int HOME_LL_x = -1;
+  public static int HOME_LL_y = -1;
+  
+  /**
+   * Home area upper right coordinates
+   */
+  public static int HOME_UR_x = -1;
+  public static int HOME_UR_y = -1;
+  
+  /**
+   * Search area lower left coordinates
+   */
+  public static int SZ_LL_x = -1;
+  public static int SZ_LL_y = -1;
+  
+  /**
+   * Search area lower left coordinates
+   */
+  public static int SZ_UR_x = -1;
+  public static int SZ_UR_y = -1;
+  
+  /**
+   * Initial position coordinates
+   */
+  public static int INITPOS_x = -1;
+  public static int INITPOS_y = -1;
+  
   /**
    * The odometer.
    */
@@ -127,20 +191,38 @@ public class Resources {
        new EV3ColorSensor(LocalEV3.get().getPort("S2"));
   
   /**
+   * The ultrasonic sensor for localization
+   */
+  public static final EV3UltrasonicSensor US_SENSOR =
+      new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
+  
+  /**
    * Instantiation of sampler object for the right light sensor
    */
   public static final LightSensor rightLightSensor = new LightSensor(LIGHT_SENSOR_RIGHT, "Red");
+  public static final LightPoller rightLightPoller = new LightPoller(rightLightSensor);
   
   /**
    * Instantiation of sampler object for the left light sensor
    */
   public static final LightSensor leftLightSensor = new LightSensor(LIGHT_SENSOR_LEFT, "Red");
+  public static final LightPoller leftLightPoller = new LightPoller(leftLightSensor);
   
   /**
    * Instantiation of sampler object for the color detection light sensor
    */
   public static final LightSensor colorLightSensor = new LightSensor(LIGHT_SENSOR_COLOR, "RGB");
   
+  /**
+   * Convert a tile size into cm
+   */
+  public static double toCM (int tileSize) {
+    return tileSize * TILE_SIZE;
+  }
   
+  public static void setInitPos(int x, int y) {
+    INITPOS_x = x;
+    INITPOS_y = y;
+  }
   
 }
