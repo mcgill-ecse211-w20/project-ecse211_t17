@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.project;
 
+import ca.mcgill.ecse211.project.Resources.Team;
 
 /**
  * Class that has a reference to the colour light sensor to detect colour and return the normalized value
@@ -38,8 +39,20 @@ public class ColorDetector {
    * 
    * @return int color
    */
-  public static int DetectColor() {
-    return 0;
+  public static Team DetectColor() {
+    
+    int colour;
+    Team colorT;
+    
+    colour = 0;
+    
+    if (colour == 0) {
+      colorT = Team.RED;
+    } else {
+      colorT = Team.GREEN;
+    }
+    
+    return colorT;
   }
   
   /**

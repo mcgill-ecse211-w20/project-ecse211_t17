@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.project;
 
-import ca.mcgill.ecse211.project.Resources;
+import ca.mcgill.ecse211.project.Resources.*;
+import ca.mcgill.ecse211.project.Resources.Team;
 
 
 /**
@@ -14,9 +15,9 @@ import ca.mcgill.ecse211.project.Resources;
  *
  */
 public class Movement {
-  //The angle error for when you turn to the right angle otherwise it shimmies
+  // The angle error for when you turn to the right angle otherwise it shimmies
   final static double DEG_ERR = 2.0;
-     
+
   /**
    * Rotate the robot clockwise without stopping, nor resetting speeds
    */
@@ -26,17 +27,17 @@ public class Movement {
     Resources.leftMotor.forward();
     Resources.rightMotor.backward();
   }
-  
+
   /**
    * Rotate the robot counter clockwise without stopping, nor resetting speeds
-   */    
+   */
   public static void rotateCounterClockwise() {
     Resources.leftMotor.setSpeed(Resources.ROTATE_SPEED);
     Resources.rightMotor.setSpeed(Resources.ROTATE_SPEED);
     Resources.leftMotor.backward();
     Resources.rightMotor.forward();
   }
-  
+
   /**
    * Move the robot forward for forever without resetting speeds
    */
@@ -46,7 +47,7 @@ public class Movement {
     Resources.leftMotor.forward();
     Resources.rightMotor.forward();
   }
-  
+
   /**
    * Moves the robot backward for forever without resetting speeds
    */
@@ -56,7 +57,18 @@ public class Movement {
     Resources.leftMotor.backward();
     Resources.rightMotor.backward();
   }
-  
+
+  /**
+   * Go forward a set distance in cm
+   * 
+   * @param distance distance in cm
+   */
+  public static void goForward(double distance) {
+    Resources.leftMotor.rotate(convertDistance(distance, 0), true);
+    Resources.rightMotor.rotate(convertDistance(distance, 1), false);
+
+  }
+
   /**
    * Moves the robot to an inputed grid point
    * <p>
@@ -66,79 +78,129 @@ public class Movement {
    * @param y y-coordinate
    * @param isNavigating false when the method is called to localize
    */
-  public static void travelTo(int x, int y, boolean isNavigating) {
+  public static void travelTo(int x, int y, boolean isLookingObstacles) {
     double X = x * Resources.TILE_SIZE;
     double Y = y * Resources.TILE_SIZE;
-    
+
     double CurX = Resources.odometer.getX();
     double CurY = Resources.odometer.getY();
-    
+
     double xDist = X - CurX;
     double yDist = Y - CurY;
-    
-    
-    int xTileCount = Math.abs(x-Resources.odometer.gridpoint[0]);
-    int yTileCount = Math.abs(y-Resources.odometer.gridpoint[1]);
-    
+
+
+    int xTileCount = Math.abs(x - Resources.odometer.gridpoint[0]);
+    int yTileCount = Math.abs(y - Resources.odometer.gridpoint[1]);
+
     turnTo(0);
-    
+
     if (yDist < 0) {
       turnTo(180);
     }
-    
-    int xCount = 0;
-    int yCount = 0;
-    while ((distance(Resources.odometer.getX(), Resources.odometer.getY(), CurX, CurY) <= Math.abs(yDist)) && yCount != yTileCount) {
-     boolean rightDetects = Resources.rightLightSensor.lineDetected();
-     boolean leftDetects = Resources.leftLightSensor.lineDetected();
-     if (isNavigating && (rightDetects || leftDetects)) {
-       if (rightDetects && !leftDetects) {
-         Resources.rightMotor.stop();
-         while (!leftDetects) {
-           Resources.leftMotor.forward();
-         }
-       } else if (leftDetects && !rightDetects) {
-         Resources.leftMotor.stop();
-         while(!rightDetects){
-           Resources.rightMotor.forward();  
-         }
-       }
-      yCount++;
-     }
-     goForward();
-   }
-   stopMotors();
-   
-   if (xDist < 0) {
-     turnTo(-90);
-   } else {
-     turnTo(90);
-   }
-    
-   while ((distance(Resources.odometer.getX(), Resources.odometer.getY(), CurX, CurY) <= Math.abs(xDist)) && xCount != xTileCount) {
-      boolean rightDetects = Resources.rightLightSensor.lineDetected();
-      boolean leftDetects = Resources.leftLightSensor.lineDetected();
-      if (isNavigating && (rightDetects || leftDetects)) {
-        if (rightDetects && !leftDetects) {
-          Resources.rightMotor.stop();
-          while (!leftDetects) {
-            Resources.leftMotor.forward();
+
+    int xCount;
+    int yCount;
+    // if robot is looking for obstacles being when it's avoid the objects it's hard to keep track of amount of tiles,
+    // this ensures that that checking is ignored
+    if (isLookingObstacles) {
+      xCount = -1;
+      yCount = -1;
+    } else {
+      xCount = 0;
+      yCount = 0;
+    }
+
+    while ((Math.abs(Resources.odometer.getY() - CurY) <= Math.abs(yDist)) && yCount != yTileCount) {
+
+      if (isLookingObstacles && UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+        
+        UltrasonicSensor.avoid();
+      }
+
+      // detecting lines is hard when you need to avoid obstacles
+      if (!isLookingObstacles) {
+        if (Resources.rightLightPoller.detected() || Resources.leftLightPoller.detected()) {
+          if (Resources.rightLightPoller.detected() && !Resources.leftLightPoller.detected()) {
+            Resources.rightMotor.stop();
+            while (!Resources.leftLightPoller.detected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+              Resources.leftMotor.forward();
+            }
+          } else if (Resources.leftLightPoller.detected() && !Resources.rightLightPoller.detected()) {
+            Resources.leftMotor.stop();
+            while (!Resources.rightLightPoller.detected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+              Resources.rightMotor.forward();
+            }
           }
-        } else if (leftDetects && !rightDetects) {
-          Resources.leftMotor.stop();
-          while(!rightDetects){
-            Resources.rightMotor.forward();  
-          }
+          yCount++;
         }
-       xCount++;
+      }
+
+      goForward();
+    }
+    stopMotors();
+
+    if (xDist < 0) {
+      turnTo(-90);
+    } else {
+      turnTo(90);
+    }
+
+    
+      while ((Math.abs(Resources.odometer.getX() - CurX) <= Math.abs(xDist)) && xCount != xTileCount) {
+
+        if (isLookingObstacles && UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+          
+            UltrasonicSensor.avoid();
+          }
+
+          // detecting lines is hard when you need to avoid obstacles
+          if (!isLookingObstacles) {
+            if (Resources.rightLightPoller.detected() || Resources.leftLightPoller.detected()) {
+              if (Resources.rightLightPoller.detected() && !Resources.leftLightPoller.detected()) {
+                Resources.rightMotor.stop();
+                while (!Resources.leftLightPoller.detected()) {
+                  Resources.leftMotor.forward();
+                }
+              } else if (Resources.leftLightPoller.detected() && !Resources.rightLightPoller.detected()) {
+                Resources.leftMotor.stop();
+                while (!Resources.rightLightPoller.detected()) {
+                  Resources.rightMotor.forward();
+                }
+              }
+              xCount++;
+            }
+          }
+
+          goForward();
+        }
+
+
+  }
+  
+  public static void moveForwardSearch(double distance) {
+    double CurX = Resources.odometer.getX();
+    double CurY = Resources.odometer.getY();
+
+    while (distance(Resources.odometer.getX(), Resources.odometer.getY(), CurX, CurY) < distance) {
+      
+      if (UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+        
+        Team colour = null;
+        colour = ColorDetector.DetectColor();
+        if (colour == Resources.team) {
+          Robot.setFoundCart(true);
+          break;
+        }
+        UltrasonicSensor.avoid();
+        
       }
       goForward();
     }
-    
   }
-  
+
   /**
    * Computes distance that needs to be traveled
+   * 
    * @param x Current x coordinate
    * @param y Current y coordinate
    * @param zeroX Initial x coordinate
@@ -149,6 +211,10 @@ public class Movement {
     return Math.sqrt(Math.pow(x - zeroX, 2) + Math.pow(y - zeroY, 2));
   }
   
+  public static void hookCart() {
+    
+  }
+
   /**
    * Computes the minimal angle to have it between -180 and 180
    * 
@@ -163,39 +229,38 @@ public class Movement {
     double exes = Math.abs((X - CurX));
     double whys = Math.abs((Y - CurY));
     if (Y < CurY) {
-      theta = Math.toDegrees(Math.atan2(whys,exes));
+      theta = Math.toDegrees(Math.atan2(whys, exes));
     } else if (Y > CurY) {
-      theta = Math.toDegrees(Math.atan2(exes,whys));
+      theta = Math.toDegrees(Math.atan2(exes, whys));
     }
     return theta;
   }
+
   /**
-   * Rotates the robot to a certain angle according to the reference frame
-   * Positive is in the clockwise direction
+   * Rotates the robot to a certain angle according to the reference frame Positive is in the clockwise direction
    * <i>Uses {@code turnBy(double)}</i>
    * 
    * @param angle to turn to
    */
   public static void turnTo(double angle) {
     double rotationAngle;
-    
+
     double curAngle = Resources.odometer.getXyt()[2];
-    
-    if ((angle - curAngle)>180) {
-      rotationAngle = angle - curAngle -360;
-    }
-    else if ((angle - curAngle)< -180) {
+
+    if ((angle - curAngle) > 180) {
+      rotationAngle = angle - curAngle - 360;
+    } else if ((angle - curAngle) < -180) {
       rotationAngle = angle - curAngle + 360;
-    }
-    else {
-      rotationAngle = angle - curAngle;  
+    } else {
+      rotationAngle = angle - curAngle;
 
     }
     turnBy(rotationAngle);
   }
-  
+
   /**
    * Turn the robot by a certain degrees. Clockwise is positive
+   * 
    * @param angle the number of degrees the robot needs to rotate
    */
   public static void turnBy(double angle) {
@@ -204,7 +269,7 @@ public class Movement {
     Resources.leftMotor.rotate(convertAngle(angle, 0), true);
     Resources.rightMotor.rotate(-convertAngle(angle, 1), false);
   }
-  
+
   /**
    * Converts input angle to the total rotation of each wheel needed to rotate the robot by that angle.
    * 
@@ -215,7 +280,7 @@ public class Movement {
   public static int convertAngle(double angle, int direction) {
     return convertDistance(Math.PI * Resources.BASE_WIDTH * angle / 360.0, direction);
   }
-  
+
   /**
    * Converts input distance to the total rotation of each wheel needed to cover that distance.
    * 
@@ -233,7 +298,7 @@ public class Movement {
     int dist = (int) ((180.0 * distance) / (Math.PI * radius));
     return dist;
   }
-  
+
   /**
    * Stops both motors.
    */

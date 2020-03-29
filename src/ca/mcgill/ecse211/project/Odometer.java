@@ -96,8 +96,12 @@ public class Odometer {
   /**
    * Method where the logic for the odometer will run and update all the values
    */
-  public void run() {
-    
+  public void start() {
+    (new Thread() {
+      public void run() {
+        
+      }
+    }).start();
   }
   
   /**
