@@ -4,13 +4,15 @@ public class LightPoller extends Thread {
   
   public LightSensor sensor;
   
+  
+  
   public LightPoller(LightSensor sensor) {
     this.sensor = sensor;
   }
   
   public void run() {
     if (this.sensor == Resources.rightLightSensor || this.sensor == Resources.leftLightSensor) {
-      if (Resources.robot.isNavigating) {
+      while (Resources.robot.isNavigating) {
         this.sensor.readColorSampleRed();
       }
     } else {

@@ -22,8 +22,19 @@ public class LightSensor {
   public EV3ColorSensor sensor;
   
   //Initialize variables for the colour sensor
+  /**
+   * Create instance of a corresponding sensor mode 
+   */
   private SensorModes sensorModes;
+  
+  /**
+   * Create instance of the sample provider
+   */
   private SampleProvider sampleProvider;
+  
+  /**
+   * Array to store measured color values
+   */
   private float[] colourSensorValues;
   
   /**
