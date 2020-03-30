@@ -25,22 +25,23 @@ public class LightSensor {
   /**
    * Create instance of a corresponding sensor mode 
    */
-  private SensorModes sensorModes;
+  public SensorModes sensorMode;
   
   /**
    * Create instance of the sample provider
    */
-  private SampleProvider sampleProvider;
+  public SampleProvider sampleProvider;
   
   /**
    * Array to store measured color values
    */
-  private float[] colourSensorValues;
-  
+  public float[] colourSensorValues;
+
   /**
-   * The color read by the color sensor
+   * Associated poller for navigation sensors.
+   * This poller is null for the color detection sensor.
    */
-  public float color;
+  public LightPoller poller;
   
   /**
    * Constructor to associate physical sensor to the corresponding sampling object 
@@ -51,29 +52,15 @@ public class LightSensor {
    */
   public LightSensor(EV3ColorSensor sensor, String mode) {
     this.sensor = sensor;
-    this.sensorModes = this.sensor;
-    this.sampleProvider = this.sensorModes.getMode(mode);
-    this.colourSensorValues = new float[this.sensorModes.sampleSize()];
+    this.sensorMode = this.sensor;
+    this.sampleProvider = this.sensorMode.getMode(mode);
+    this.colourSensorValues = new float[this.sensorMode.sampleSize()];
   }
   
-  
-  /**
-   * Reads the color from the Color Sensor
-   */
-  public void readColorSampleRed() {
-    this.sampleProvider.fetchSample(colourSensorValues, 0);
-    color = colourSensorValues[0] * 100;
-    
-   }
-  
-  /**
-   * Check whether a line is detected or not given a float sensor value
-   * 
-   * @param colorSensorValue from a EV3ColorSensor
-   */
-  public boolean lineDetected() {
-    return this.color < 0.35;
+  public void createPoller() {
+    this.poller = new LightPoller(this);
   }
+
   
   /**
    * Helper method to make angle positive

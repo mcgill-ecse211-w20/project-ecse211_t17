@@ -200,13 +200,11 @@ public class Resources {
    * Instantiation of sampler object for the right light sensor
    */
   public static final LightSensor rightLightSensor = new LightSensor(LIGHT_SENSOR_RIGHT, "Red");
-  public static final LightPoller rightLightPoller = new LightPoller(rightLightSensor);
   
   /**
    * Instantiation of sampler object for the left light sensor
    */
   public static final LightSensor leftLightSensor = new LightSensor(LIGHT_SENSOR_LEFT, "Red");
-  public static final LightPoller leftLightPoller = new LightPoller(leftLightSensor);
   
   /**
    * Instantiation of sampler object for the color detection light sensor

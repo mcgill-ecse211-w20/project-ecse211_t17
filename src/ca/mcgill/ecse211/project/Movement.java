@@ -119,15 +119,15 @@ public class Movement {
 
       // detecting lines is hard when you need to avoid obstacles
       if (!isLookingObstacles) {
-        if (Resources.rightLightPoller.detected() || Resources.leftLightPoller.detected()) {
-          if (Resources.rightLightPoller.detected() && !Resources.leftLightPoller.detected()) {
+        if (Resources.rightLightSensor.poller.lineDetected() || Resources.leftLightSensor.poller.lineDetected()) {
+          if (Resources.rightLightSensor.poller.lineDetected() && !Resources.leftLightSensor.poller.lineDetected()) {
             Resources.rightMotor.stop();
-            while (!Resources.leftLightPoller.detected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+            while (!Resources.leftLightSensor.poller.lineDetected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
               Resources.leftMotor.forward();
             }
-          } else if (Resources.leftLightPoller.detected() && !Resources.rightLightPoller.detected()) {
+          } else if (Resources.leftLightSensor.poller.lineDetected() && !Resources.rightLightSensor.poller.lineDetected()) {
             Resources.leftMotor.stop();
-            while (!Resources.rightLightPoller.detected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
+            while (!Resources.rightLightSensor.poller.lineDetected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
               Resources.rightMotor.forward();
             }
           }
@@ -155,15 +155,15 @@ public class Movement {
 
           // detecting lines is hard when you need to avoid obstacles
           if (!isLookingObstacles) {
-            if (Resources.rightLightPoller.detected() || Resources.leftLightPoller.detected()) {
-              if (Resources.rightLightPoller.detected() && !Resources.leftLightPoller.detected()) {
+            if (Resources.rightLightSensor.poller.lineDetected() || Resources.leftLightSensor.poller.lineDetected()) {
+              if (Resources.rightLightSensor.poller.lineDetected() && !Resources.leftLightSensor.poller.lineDetected()) {
                 Resources.rightMotor.stop();
-                while (!Resources.leftLightPoller.detected()) {
+                while (!Resources.leftLightSensor.poller.lineDetected()) {
                   Resources.leftMotor.forward();
                 }
-              } else if (Resources.leftLightPoller.detected() && !Resources.rightLightPoller.detected()) {
+              } else if (Resources.leftLightSensor.poller.lineDetected() && !Resources.rightLightSensor.poller.lineDetected()) {
                 Resources.leftMotor.stop();
-                while (!Resources.rightLightPoller.detected()) {
+                while (!Resources.rightLightSensor.poller.lineDetected()) {
                   Resources.rightMotor.forward();
                 }
               }

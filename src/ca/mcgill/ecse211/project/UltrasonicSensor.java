@@ -21,9 +21,10 @@ import ca.mcgill.ecse211.project.Resources.*;
  * @author Ariane Leroux
  *
  */
-public class UltrasonicSensor {
+public class UltrasonicSensor extends Thread {
   
   //Initialize starting variables
+    
   private static float[] usData = new float[Resources.US_SENSOR.getMode("Distance").sampleSize()];;
   
   //Initialize variables
@@ -33,8 +34,38 @@ public class UltrasonicSensor {
    */
   public enum Direction { LEFT, RIGHT };
   
+  /**
+   * Distance measured by the sensor
+   */
+  public static double distance;
+  
   //private objects used by the localizer
   private static Odometer odometer = Resources.odometer;
+  
+  /**
+   * Method to create a thread that will run while in the search zone
+   * to poll the distance from the Ultrasonic Distance
+   */
+  public static void usSensorPoller() {
+    (new Thread() {
+      public void run() {
+        while (true) {
+          while (Robot.robotStatus == Robot.State.SEARCHING) {
+            distance = getFilteredData();
+          }
+          try {
+            Thread.sleep(200);
+          } catch (InterruptedException e) {
+            
+          }
+          //should we do this, or just kill the thread once we 
+          //exit the search zone, since we wont need the sensor after?
+        }
+      }
+    }).start();
+  }
+  
+  
   
   /**
    * Method that find the 0deg according to whichever orientation
