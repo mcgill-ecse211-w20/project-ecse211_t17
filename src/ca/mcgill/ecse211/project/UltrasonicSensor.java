@@ -21,7 +21,7 @@ import ca.mcgill.ecse211.project.Resources.*;
  * @author Ariane Leroux
  *
  */
-public class UltrasonicSensor extends Thread {
+public class UltrasonicSensor {
   
   //Initialize starting variables
     
