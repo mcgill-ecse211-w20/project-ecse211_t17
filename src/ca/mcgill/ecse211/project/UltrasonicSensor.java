@@ -22,13 +22,12 @@ import static ca.mcgill.ecse211.project.Resources.*;
  * @author Ariane Leroux
  *
  */
-public class UltrasonicSensor extends Thread {
+
+public class UltrasonicSensor {
 
   // Initialize starting variables
 
   private static float[] usData = new float[US_SENSOR.getMode("Distance").sampleSize()];;
-
-  // Initialize variables
   /**
    * Enumeration for which direction the robot should turn, i.e. Clockwise or Counter-clockwise
    *
