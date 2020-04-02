@@ -2,7 +2,7 @@ package ca.mcgill.ecse211.project;
 
 import lejos.hardware.Button;
 
-//import static ca.mcgill.ecse211.project.Resources.*;
+import static ca.mcgill.ecse211.project.Resources.*;
 
 /**
  * Main class where the main thread will be started. All actions will be done via the Main class,
@@ -27,7 +27,7 @@ public class Main {
     int click;
     
     //start download wifi class 
-    Resources.odometer.start();
+    odometer.start();
     
     click = Button.waitForAnyPress();
     

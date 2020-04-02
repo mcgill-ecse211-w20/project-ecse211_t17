@@ -1,7 +1,6 @@
 package ca.mcgill.ecse211.project;
 
-import ca.mcgill.ecse211.project.Resources.*;
-import ca.mcgill.ecse211.project.Resources.Team;
+import static ca.mcgill.ecse211.project.Resources.*;
 
 
 /**
@@ -22,40 +21,40 @@ public class Movement {
    * Rotate the robot clockwise without stopping, nor resetting speeds
    */
   public static void rotateClockwise() {
-    Resources.leftMotor.setSpeed(Resources.ROTATE_SPEED);
-    Resources.rightMotor.setSpeed(Resources.ROTATE_SPEED);
-    Resources.leftMotor.forward();
-    Resources.rightMotor.backward();
+    leftMotor.setSpeed(ROTATE_SPEED);
+    rightMotor.setSpeed(ROTATE_SPEED);
+    leftMotor.forward();
+    rightMotor.backward();
   }
 
   /**
    * Rotate the robot counter clockwise without stopping, nor resetting speeds
    */
   public static void rotateCounterClockwise() {
-    Resources.leftMotor.setSpeed(Resources.ROTATE_SPEED);
-    Resources.rightMotor.setSpeed(Resources.ROTATE_SPEED);
-    Resources.leftMotor.backward();
-    Resources.rightMotor.forward();
+    leftMotor.setSpeed(ROTATE_SPEED);
+    rightMotor.setSpeed(ROTATE_SPEED);
+    leftMotor.backward();
+    rightMotor.forward();
   }
 
   /**
    * Move the robot forward for forever without resetting speeds
    */
   public static void goForward() {
-    Resources.leftMotor.setSpeed(Resources.FORWARD_SPEED_LEFT);
-    Resources.rightMotor.setSpeed(Resources.FORWARD_SPEED_RIGHT);
-    Resources.leftMotor.forward();
-    Resources.rightMotor.forward();
+    leftMotor.setSpeed(FORWARD_SPEED_LEFT);
+    rightMotor.setSpeed(FORWARD_SPEED_RIGHT);
+    leftMotor.forward();
+    rightMotor.forward();
   }
 
   /**
    * Moves the robot backward for forever without resetting speeds
    */
   public static void moveBack() {
-    Resources.leftMotor.setSpeed(Resources.FORWARD_SPEED_LEFT);
-    Resources.rightMotor.setSpeed(Resources.FORWARD_SPEED_RIGHT);
-    Resources.leftMotor.backward();
-    Resources.rightMotor.backward();
+    leftMotor.setSpeed(FORWARD_SPEED_LEFT);
+    rightMotor.setSpeed(FORWARD_SPEED_RIGHT);
+    leftMotor.backward();
+    rightMotor.backward();
   }
 
   /**
@@ -64,8 +63,8 @@ public class Movement {
    * @param distance distance in cm
    */
   public static void goForward(double distance) {
-    Resources.leftMotor.rotate(convertDistance(distance, 0), true);
-    Resources.rightMotor.rotate(convertDistance(distance, 1), false);
+    leftMotor.rotate(convertDistance(distance, 0), true);
+    rightMotor.rotate(convertDistance(distance, 1), false);
 
   }
 
@@ -79,18 +78,18 @@ public class Movement {
    * @param isNavigating false when the method is called to localize
    */
   public static void travelTo(int x, int y, boolean isLookingObstacles) {
-    double X = x * Resources.TILE_SIZE;
-    double Y = y * Resources.TILE_SIZE;
+    double X = x * TILE_SIZE;
+    double Y = y * TILE_SIZE;
 
-    double CurX = Resources.odometer.getX();
-    double CurY = Resources.odometer.getY();
+    double CurX = odometer.getX();
+    double CurY = odometer.getY();
 
     double xDist = X - CurX;
     double yDist = Y - CurY;
 
 
-    int xTileCount = Math.abs(x - Resources.odometer.gridpoint[0]);
-    int yTileCount = Math.abs(y - Resources.odometer.gridpoint[1]);
+    int xTileCount = Math.abs(x - odometer.gridpoint[0]);
+    int yTileCount = Math.abs(y - odometer.gridpoint[1]);
 
     turnTo(0);
 
@@ -110,25 +109,27 @@ public class Movement {
       yCount = 0;
     }
 
-    while ((Math.abs(Resources.odometer.getY() - CurY) <= Math.abs(yDist)) && yCount != yTileCount) {
+    while ((Math.abs(odometer.getY() - CurY) <= Math.abs(yDist)) && yCount != yTileCount) {
 
-      if (isLookingObstacles && UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
-        
+      if (isLookingObstacles && UltrasonicSensor.getDistance() < DETECTION_DISTANCE) {
+
         UltrasonicSensor.avoid();
       }
 
       // detecting lines is hard when you need to avoid obstacles
       if (!isLookingObstacles) {
-        if (Resources.rightLightSensor.poller.lineDetected() || Resources.leftLightSensor.poller.lineDetected()) {
-          if (Resources.rightLightSensor.poller.lineDetected() && !Resources.leftLightSensor.poller.lineDetected()) {
-            Resources.rightMotor.stop();
-            while (!Resources.leftLightSensor.poller.lineDetected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
-              Resources.leftMotor.forward();
+        if (rightLightPoller.lineDetected() || leftLightPoller.lineDetected()) {
+          if (rightLightPoller.lineDetected() && !leftLightPoller.lineDetected()) {
+            rightMotor.stop();
+            while (!leftLightPoller.lineDetected()
+                || UltrasonicSensor.getDistance() < DETECTION_DISTANCE) {
+              leftMotor.forward();
             }
-          } else if (Resources.leftLightSensor.poller.lineDetected() && !Resources.rightLightSensor.poller.lineDetected()) {
-            Resources.leftMotor.stop();
-            while (!Resources.rightLightSensor.poller.lineDetected() || UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
-              Resources.rightMotor.forward();
+          } else if (leftLightPoller.lineDetected() && !rightLightPoller.lineDetected()) {
+            leftMotor.stop();
+            while (!rightLightPoller.lineDetected()
+                || UltrasonicSensor.getDistance() < DETECTION_DISTANCE) {
+              rightMotor.forward();
             }
           }
           yCount++;
@@ -145,57 +146,60 @@ public class Movement {
       turnTo(90);
     }
 
-    
-      while ((Math.abs(Resources.odometer.getX() - CurX) <= Math.abs(xDist)) && xCount != xTileCount) {
 
-        if (isLookingObstacles && UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
-          
-            UltrasonicSensor.avoid();
-          }
+    while ((Math.abs(odometer.getX() - CurX) <= Math.abs(xDist)) && xCount != xTileCount) {
 
-          // detecting lines is hard when you need to avoid obstacles
-          if (!isLookingObstacles) {
-            if (Resources.rightLightSensor.poller.lineDetected() || Resources.leftLightSensor.poller.lineDetected()) {
-              if (Resources.rightLightSensor.poller.lineDetected() && !Resources.leftLightSensor.poller.lineDetected()) {
-                Resources.rightMotor.stop();
-                while (!Resources.leftLightSensor.poller.lineDetected()) {
-                  Resources.leftMotor.forward();
-                }
-              } else if (Resources.leftLightSensor.poller.lineDetected() && !Resources.rightLightSensor.poller.lineDetected()) {
-                Resources.leftMotor.stop();
-                while (!Resources.rightLightSensor.poller.lineDetected()) {
-                  Resources.rightMotor.forward();
-                }
-              }
-              xCount++;
+      if (isLookingObstacles && UltrasonicSensor.getDistance() < DETECTION_DISTANCE) {
+
+        UltrasonicSensor.avoid();
+      }
+
+      // detecting lines is hard when you need to avoid obstacles
+      if (!isLookingObstacles) {
+        if (rightLightPoller.lineDetected() || leftLightPoller.lineDetected()) {
+          if (rightLightPoller.lineDetected() && !leftLightPoller.lineDetected()) {
+            rightMotor.stop();
+            while (!leftLightPoller.lineDetected()) {
+              leftMotor.forward();
+            }
+          } else if (leftLightPoller.lineDetected() && !rightLightPoller.lineDetected()) {
+            leftMotor.stop();
+            while (!rightLightPoller.lineDetected()) {
+              rightMotor.forward();
             }
           }
-
-          goForward();
+          xCount++;
         }
+      }
+
+      goForward();
+    }
 
 
   }
-  
-  public static void moveForwardSearch(double distance) {
-    double CurX = Resources.odometer.getX();
-    double CurY = Resources.odometer.getY();
 
-    while (distance(Resources.odometer.getX(), Resources.odometer.getY(), CurX, CurY) < distance) {
-      
-      if (UsPoller.getDistance() < Resources.DETECTION_DISTANCE) {
-        
-        Team colour = null;
-        colour = ColorDetector.DetectColor();
-        if (colour == Resources.team) {
-          Robot.setFoundCart(true);
-          break;
+  public static void moveForwardSearch(double distance) {
+    double CurX = odometer.getX();
+    double CurY = odometer.getY();
+
+    if (!Robot.getFoundCart()) {
+      while (distance(odometer.getX(), odometer.getY(), CurX, CurY) < distance) {
+
+        if (UltrasonicSensor.getDistance() < DETECTION_DISTANCE) {
+
+          int colour = ColorDetector.DetectColor();
+          if (colour != -1) {
+            Robot.setFoundCart(true);
+
+            break;
+          }
+          UltrasonicSensor.avoid();
+
         }
-        UltrasonicSensor.avoid();
-        
+        goForward();
       }
-      goForward();
     }
+
   }
 
   /**
@@ -210,10 +214,37 @@ public class Movement {
   public static double distance(double x, double y, double zeroX, double zeroY) {
     return Math.sqrt(Math.pow(x - zeroX, 2) + Math.pow(y - zeroY, 2));
   }
+
   
-  public static void hookCart() {
-    
+
+
+  public static void raiseCart() {
+    goForward(-15.0);
+    turnBy(180.0);
+    goForward(-14.0 - DETECTION_DISTANCE); //off by a cm from the cart to give some leeway
+    raiseMotor.rotate(135, true);
   }
+  
+  /**
+   * TravelTo function to move the robot to the coordinates x and y in the coordinate system set by the odometer
+   * @param x the x coordinate
+   * @param y the y coordinate
+   */
+  public static void travelTo(double x, double y) {
+      
+      //Difference from current point to the destination point
+      double angle; // angle between the current point and destination
+      double distance; // distance between current point and destination
+      
+      //Math to calculate the angle using trigonometry and Pytharian theorem
+      angle = Math.toDegrees(Math.atan2(y - odometer.getY(), x - odometer.getX()));
+      distance = Math.sqrt((x - odometer.getX())*(x - odometer.getX()) + (y - odometer.getY())*(y - odometer.getY()));
+      
+      //Turn to the correct angle in the direction of the destination and move the right distance to the destination
+      turnTo(angle);
+      goForward(distance);
+  }
+
 
   /**
    * Computes the minimal angle to have it between -180 and 180
@@ -245,7 +276,7 @@ public class Movement {
   public static void turnTo(double angle) {
     double rotationAngle;
 
-    double curAngle = Resources.odometer.getXyt()[2];
+    double curAngle = odometer.getXyt()[2];
 
     if ((angle - curAngle) > 180) {
       rotationAngle = angle - curAngle - 360;
@@ -264,10 +295,10 @@ public class Movement {
    * @param angle the number of degrees the robot needs to rotate
    */
   public static void turnBy(double angle) {
-    Resources.leftMotor.setSpeed(Resources.ROTATE_SPEED);
-    Resources.rightMotor.setSpeed(Resources.ROTATE_SPEED);
-    Resources.leftMotor.rotate(convertAngle(angle, 0), true);
-    Resources.rightMotor.rotate(-convertAngle(angle, 1), false);
+    leftMotor.setSpeed(ROTATE_SPEED);
+    rightMotor.setSpeed(ROTATE_SPEED);
+    leftMotor.rotate(convertAngle(angle, 0), true);
+    rightMotor.rotate(-convertAngle(angle, 1), false);
   }
 
   /**
@@ -278,7 +309,7 @@ public class Movement {
    * @return the wheel rotations necessary to rotate the robot by the angle
    */
   public static int convertAngle(double angle, int direction) {
-    return convertDistance(Math.PI * Resources.BASE_WIDTH * angle / 360.0, direction);
+    return convertDistance(Math.PI * BASE_WIDTH * angle / 360.0, direction);
   }
 
   /**
@@ -291,9 +322,9 @@ public class Movement {
   public static int convertDistance(double distance, int direction) {
     double radius;
     if (direction == 0) {
-      radius = Resources.WHEEL_RAD_LEFT;
+      radius = WHEEL_RAD_LEFT;
     } else {
-      radius = Resources.WHEEL_RAD_RIGHT;
+      radius = WHEEL_RAD_RIGHT;
     }
     int dist = (int) ((180.0 * distance) / (Math.PI * radius));
     return dist;
@@ -303,7 +334,7 @@ public class Movement {
    * Stops both motors.
    */
   public static void stopMotors() {
-    Resources.leftMotor.stop(true);
-    Resources.rightMotor.stop(false);
+    leftMotor.stop(true);
+    rightMotor.stop(false);
   }
 }

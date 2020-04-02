@@ -1,18 +1,29 @@
 package ca.mcgill.ecse211.project;
 
+import static ca.mcgill.ecse211.project.Resources.*;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.SensorModes;
+import lejos.robotics.SampleProvider;
+
 public class LightPoller extends Thread {
   
-  public LightSensor sensor;
+  public SampleProvider sampleProvider;
+  public EV3ColorSensor sensor;
+  public SensorModes sensorMode;
+  public float[] colourSensorValues;
   
 
   private float color;
 
-  public LightPoller(LightSensor sensor) {
+  public LightPoller(EV3ColorSensor sensor, String mode) {
     this.sensor = sensor;
+    this.sensorMode = this.sensor;
+    this.sampleProvider = this.sensorMode.getMode(mode);
+    this.colourSensorValues = new float[this.sensorMode.sampleSize()];
   }
   
   public void run() {
-    if (this.sensor == Resources.rightLightSensor || this.sensor == Resources.leftLightSensor) {
+    if (this == rightLightPoller || this == leftLightPoller) {
       while (true) {
         while(Robot.isNavigating) {
           this.readColorSampleRed();
@@ -20,6 +31,12 @@ public class LightPoller extends Thread {
         this.sleepFor(200);
       }
       
+    } else if (this == colorLightPoller) {
+      while (true) {
+        while(Robot.isSearching) {
+          this.readColorSample();
+        }
+      }
     } else {
       System.out.println("No thread is associated with this sensor");
     }
@@ -29,10 +46,23 @@ public class LightPoller extends Thread {
   /**
    * Reads the color from the Color Sensor
    */
-  public void readColorSampleRed() {
-    this.sensor.sampleProvider.fetchSample(this.sensor.colourSensorValues, 0);
-    this.color = this.sensor.colourSensorValues[0] * 100;
+  private void readColorSampleRed() {
+    this.sampleProvider.fetchSample(this.colourSensorValues, 0);
+    this.color = this.colourSensorValues[0] * 100;
    }
+  
+  private void readColorSample() {
+    this.sampleProvider.fetchSample(this.colourSensorValues, 0);
+  }
+  
+  
+  public float getColor() {
+    return this.color;
+  }
+  
+  public float[] getColours() {
+    return this.colourSensorValues;
+  }
   
   /**
    * Check whether a line is detected or not given a float sensor value
@@ -41,10 +71,6 @@ public class LightPoller extends Thread {
    */
   public boolean lineDetected() {
     return this.color < 0.35;
-  }
-  
-  public double getColor() {
-    return this.color;
   }
   
   /**

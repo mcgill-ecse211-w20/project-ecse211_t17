@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.project;
 
-import ca.mcgill.ecse211.project.Resources.Team;
+import static ca.mcgill.ecse211.project.Resources.*;
 import lejos.hardware.Sound;
 
 /**
@@ -24,7 +24,7 @@ public class Robot {
     IDLE,
     TRAVELING,
     CROSSING,
-    TOSEARCH,
+    ONISLAND,
     SEARCHING,
     IDENTIFICATION
   }
@@ -53,7 +53,7 @@ public class Robot {
   /**
    * Set to true if it's looking for obstacles
    */
-  private static boolean isLookingObstacles;
+  public static boolean isLookingObstacles;
   
   /**
    * orientation of bridge
@@ -110,7 +110,7 @@ public class Robot {
         crossBridge = true;
         isLookingObstacles = false;
         break;
-      case TOSEARCH:
+      case ONISLAND:
         isNavigating = true;
         isSearching = false;
         isLookingObstacles = true;
@@ -137,41 +137,51 @@ public class Robot {
    */
   public static void initialize() {
     
-    Team colour;
+    int colour;
     
     do {
       colour = ColorDetector.DetectColor();
-      if (colour == Team.RED) {
+      if (colour == 0) {
         
-        Resources.team = Resources.Team.RED;
-        Resources.corner = Wifi.RedCorner;
+        team = Team.RED;
+        corner = Wifi.RedCorner;
         
-        Resources.TN_LL_x = Wifi.TNR_LL_x;
-        Resources.TN_LL_y = Wifi.TNR_LL_y;
-        Resources.TN_UR_x = Wifi.TNR_UR_x;
-        Resources.TN_UR_y = Wifi.TNR_UR_y;
+        TN_LL_x = Wifi.TNR_LL_x;
+        TN_LL_y = Wifi.TNR_LL_y;
+        TN_UR_x = Wifi.TNR_UR_x;
+        TN_UR_y = Wifi.TNR_UR_y;
         
-        Resources.HOME_LL_x = Wifi.RED_LL_x;
-        Resources.HOME_LL_y = Wifi.RED_LL_y;
-        Resources.HOME_UR_x = Wifi.RED_UR_x;
-        Resources.HOME_UR_y = Wifi.RED_UR_y;
-      } else if (colour == Team.GREEN) {
+        HOME_LL_x = Wifi.RED_LL_x;
+        HOME_LL_y = Wifi.RED_LL_y;
+        HOME_UR_x = Wifi.RED_UR_x;
+        HOME_UR_y = Wifi.RED_UR_y;
         
-        Resources.team = Resources.Team.GREEN;
-        Resources.corner = Wifi.GreenCorner;
+        SZ_LL_x = Wifi.SZR_LL_x;
+        SZ_LL_y = Wifi.SZR_LL_y;
+        SZ_UR_x = Wifi.SZR_UR_x;
+        SZ_UR_y = Wifi.SZR_UR_y;
+      } else if (colour == 1) {
         
-        Resources.TN_LL_x = Wifi.TNG_LL_x;
-        Resources.TN_LL_y = Wifi.TNG_LL_y;
-        Resources.TN_UR_x = Wifi.TNG_UR_x;
-        Resources.TN_UR_y = Wifi.TNG_UR_y;
+        team = Team.GREEN;
+        corner = Wifi.GreenCorner;
         
-        Resources.HOME_LL_x = Wifi.RED_LL_x;
-        Resources.HOME_LL_y = Wifi.RED_LL_y;
-        Resources.HOME_UR_x = Wifi.RED_UR_x;
-        Resources.HOME_UR_y = Wifi.RED_UR_y;
+        TN_LL_x = Wifi.TNG_LL_x;
+        TN_LL_y = Wifi.TNG_LL_y;
+        TN_UR_x = Wifi.TNG_UR_x;
+        TN_UR_y = Wifi.TNG_UR_y;
+        
+        HOME_LL_x = Wifi.RED_LL_x;
+        HOME_LL_y = Wifi.RED_LL_y;
+        HOME_UR_x = Wifi.RED_UR_x;
+        HOME_UR_y = Wifi.RED_UR_y;
+        
+        SZ_LL_x = Wifi.SZR_LL_x;
+        SZ_LL_y = Wifi.SZR_LL_y;
+        SZ_UR_x = Wifi.SZR_UR_x;
+        SZ_UR_y = Wifi.SZR_UR_y;
       }
       
-    } while (Resources.team == null);
+    } while (team == null);
     
     UltrasonicSensor.reorient();
     UltrasonicSensor.moveToOrigin();
@@ -184,8 +194,8 @@ public class Robot {
   public static void toSearch() {
     
     
-    double xCenterHome = (double)(Resources.HOME_LL_x + Resources.HOME_UR_x)/2.0;
-    double yCenterHome = (double)(Resources.HOME_LL_y + Resources.HOME_UR_y)/2.0;
+    double xCenterHome = (double)(HOME_LL_x + HOME_UR_x)/2.0;
+    double yCenterHome = (double)(HOME_LL_y + HOME_UR_y)/2.0;
     double xCenterIsland = (double)(Wifi.Island_LL_x + Wifi.Island_UR_x)/2.0;
     double yCenterIsland = (double)(Wifi.Island_LL_y + Wifi.Island_UR_y)/2.0;
     
@@ -194,45 +204,45 @@ public class Robot {
     
     if (xDiff > yDiff) {
       direction = Direction.Horizontal;
-      bridgeSize = Resources.TN_UR_x - Resources.TN_LL_x;
+      bridgeSize = TN_UR_x - TN_LL_x;
     } else { //both when the xDiff is smaller and when its equal the bridge is vertical
       direction = Direction.Vertical;
-      bridgeSize = Resources.TN_UR_y - Resources.TN_LL_y;
+      bridgeSize = TN_UR_y - TN_LL_y;
     } 
     
     if (direction == Direction.Horizontal) {
       //Starting corner is on the right
-      if (Resources.corner == 1 || Resources.corner == 2) {
+      if (corner == 1 || corner == 2) {
         
-        Movement.travelTo(Resources.TN_UR_x + 1, Resources.TN_LL_y, isLookingObstacles);
+        Movement.travelTo(TN_UR_x + 1, TN_LL_y, isLookingObstacles);
         Movement.turnTo(0.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(-90.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(180.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_LL_x -1), Resources.toCM(Resources.TN_LL_y), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_LL_x -1), toCM(TN_LL_y), 0.0);
         
-        updateState(State.TOSEARCH);
+        updateState(State.ONISLAND);
         
         
       } else { //Starting corner is on the left
-        Movement.travelTo(Resources.TN_LL_x - 1, Resources.TN_LL_y, isLookingObstacles);
+        Movement.travelTo(TN_LL_x - 1, TN_LL_y, isLookingObstacles);
         Movement.turnTo(0.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(90.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(180.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_UR_x  + 1), Resources.toCM(Resources.TN_LL_y), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_UR_x  + 1), toCM(TN_LL_y), 0.0);
         
-        updateState(State.TOSEARCH);
+        updateState(State.ONISLAND);
         
       }
       
@@ -240,41 +250,41 @@ public class Robot {
     } else if (direction == Direction.Vertical) {
       
     //Starting corner is above
-      if (Resources.corner == 2 || Resources.corner == 3) {
+      if (corner == 2 || corner == 3) {
         
-        Movement.travelTo(Resources.TN_UR_x, Resources.TN_UR_y + 1, isLookingObstacles);
+        Movement.travelTo(TN_UR_x, TN_UR_y + 1, isLookingObstacles);
         Movement.turnTo(-90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(180.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_UR_x), Resources.toCM(Resources.TN_LL_y - 1), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_UR_x), toCM(TN_LL_y - 1), 0.0);
         
-        updateState(State.TOSEARCH);
+        updateState(State.ONISLAND);
         
       } else { //Starting corner is below
-        Movement.travelTo(Resources.TN_UR_x, Resources.TN_LL_y - 1, isLookingObstacles);
+        Movement.travelTo(TN_UR_x, TN_LL_y - 1, isLookingObstacles);
         Movement.turnTo(-90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(0.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_UR_x), Resources.toCM(Resources.TN_UR_y + 1), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_UR_x), toCM(TN_UR_y + 1), 0.0);
         
-        updateState(State.TOSEARCH);
+        updateState(State.ONISLAND);
         
       }
     }
     
-    Movement.travelTo(Resources.SZ_LL_x, Resources.SZ_LL_y, isLookingObstacles);
+    Movement.travelTo(SZ_LL_x, SZ_LL_y, isLookingObstacles);
     updateState(State.SEARCHING);
     beeps(3);
     //Movement.stopMotors();
@@ -282,38 +292,119 @@ public class Robot {
   
   /**
    * Only localize according to the lightsensor
+   * Reason why not two same time from lightsensor is bc too many threads
    */
-  public static double localize() {
-    return 0.0;
+  public static void localize() {
+    Movement.turnTo(45);
+    
+    float rightValue = rightLightPoller.getColor();
+    float leftValue = leftLightPoller.getColor();
+    
+    boolean rPassed = false;
+    boolean lPassed = false;
+    
+    double[] rAngles = {-1, -1, -1, -1};
+    double[] lAngles = {-1, -1, -1, -1};
+    double[] avgAngles = new double[4];
+    
+    //Counters counting how many lines are stored in the arrays
+    int r = 0;
+    int l = 0;
+    
+    //start rotation and clock all 4 gridlines until all 4 are obtained
+    while (rAngles[3] == -1 && lAngles[3] == -1) {
+      //Get sensor values
+      rightValue = rightLightPoller.getColor();
+      leftValue = leftLightPoller.getColor();
+      
+      //when right sensor first encounters the line
+      if (rightValue > 0.4) {
+        rPassed = false;
+        //if it passed a line then set the passed to true and store data in array
+      } else if (rightValue < 0.35 && !rPassed && rAngles[r] == -1) {
+        rAngles[r] = odometer.getTheta() + 52.0; // adjustment because it is on the right
+        rPassed = true;
+        r++;
+      }
+      
+      //when left sensor first encounters the line
+      if (leftValue > 0.4) {
+        lPassed = false;
+        //if it passed a line then set the passed to true and store data in array
+      } else if (leftValue < 0.35 && !lPassed && lAngles[l] == -1) {
+        lAngles[l] = odometer.getTheta() - 53.0; // adjustment because it is on the right
+        lPassed = true;
+        l++;
+      }
+      
+      //Rotate as long as not all four lines are found
+      Movement.rotateCounterClockwise();
+    }
+    
+    /**
+     * ========================CALCULATIONS==============================
+     */
+    //obtaining average angle for each 
+    for (int i = 0; i<4; i++) {
+      avgAngles[i] = (makePositive(rAngles[i]) + makePositive(lAngles[i]))/2.0;
+    }
+    
+    double thetaY = makeObtuse(Math.abs(avgAngles[0] - avgAngles[2]));
+    double thetaX = makeObtuse(Math.abs(rAngles[1] - rAngles[3]));
+    double x= LIGHT_SENSOR_DISTANCE * Math.cos(Math.toRadians(thetaY/2));
+    double y = LIGHT_SENSOR_DISTANCE * Math.cos(Math.toRadians(thetaX)/2);
+    
+    odometer.setXyt(x, y, odometer.getTheta());
+    //Move to the crossing of lines and rotate back to 0deg
+    Movement.travelTo(0.0, 0.0);
+    Movement.turnTo(fixAngle(avgAngles[0], avgAngles[2]) +180.0);
   }
   
+  private static double makePositive(double angle) {
+    return (angle < 0) ? angle + 360 : angle;
+  }
+  private static double makeObtuse(double angle) {
+    return (angle > 180) ? 360-angle : angle;
+  }
+  private static double fixAngle(double a, double b) {
+    double diff = a - b;
+    diff = (diff < 0) ? (diff + 360.0) : diff;
+    if (diff > 180) {
+      diff = 360.0 - diff;
+    }
+    diff = (180 - diff)/2.0;
+    diff = diff + a;
+    diff = (diff > 180) ? (diff - 360) : diff;
+    return diff;
+  }
   /**
    * Search the area with the data from wifi class
    */
   public static void search() {
     
-    int xLength = Resources.SZ_UR_x - Resources.SZ_LL_x;
-    int yLength = Resources.SZ_UR_y - Resources.SZ_LL_y - 1;
+    int xLength = SZ_UR_x - SZ_LL_x;
+    int yLength = SZ_UR_y - SZ_LL_y - 1;
     
     Movement.turnTo(0.0);
-    Movement.goForward(Resources.TILE_SIZE/2);
+    Movement.goForward(TILE_SIZE/2);
     
     int yCounter = 0;
     double angle;
     while (yCounter <= yLength && !foundCart) {
       angle = (yCounter % 2 == 0) ? 90.0 : -90.0;
       Movement.turnTo(angle);
-      Movement.moveForwardSearch(Resources.toCM(xLength));
+      Movement.moveForwardSearch(toCM(xLength));
       Movement.turnTo(0.0);
-      Movement.moveForwardSearch(Resources.TILE_SIZE/2);
+      Movement.moveForwardSearch(TILE_SIZE/2);
     }
     
     if (foundCart) {
-      Movement.hookCart();
+      orientPerpendicular();
+      Movement.raiseCart();
     } else {
       //sad
     }
-    updateState(State.TOSEARCH);
+    updateState(State.ONISLAND);
   }
   
   /**
@@ -323,34 +414,34 @@ public class Robot {
     
     if (direction == Direction.Horizontal) {
       //Island is on the left
-      if (Resources.corner == 1 || Resources.corner == 2) {
+      if (corner == 1 || corner == 2) {
         
-        Movement.travelTo(Resources.TN_LL_x - 1, Resources.TN_LL_y, isLookingObstacles);
+        Movement.travelTo(TN_LL_x - 1, TN_LL_y, isLookingObstacles);
         Movement.turnTo(0.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(90.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(180.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_UR_x + 1), Resources.toCM(Resources.TN_LL_y), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_UR_x + 1), toCM(TN_LL_y), 0.0);
         
         updateState(State.TRAVELING);
         
       } else { //Island is on the right
-        Movement.travelTo(Resources.TN_LL_x + 1, Resources.TN_LL_y, isLookingObstacles);
+        Movement.travelTo(TN_LL_x + 1, TN_LL_y, isLookingObstacles);
         Movement.turnTo(0.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(-90.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(180.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_LL_x  - 1), Resources.toCM(Resources.TN_LL_y), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_LL_x  - 1), toCM(TN_LL_y), 0.0);
         
         updateState(State.TRAVELING);
         
@@ -360,45 +451,58 @@ public class Robot {
     } else if (direction == Direction.Vertical) {
       
     //Island is below
-      if (Resources.corner == 2 || Resources.corner == 3) {
+      if (corner == 2 || corner == 3) {
         
-        Movement.travelTo(Resources.TN_UR_x, Resources.TN_LL_y - 1, isLookingObstacles);
+        Movement.travelTo(TN_UR_x, TN_LL_y - 1, isLookingObstacles);
         Movement.turnTo(-90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(0.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_UR_x), Resources.toCM(Resources.TN_UR_y + 1), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_UR_x), toCM(TN_UR_y + 1), 0.0);
         
         updateState(State.TRAVELING);
         
       } else { //Island is above
-        Movement.travelTo(Resources.TN_UR_x, Resources.TN_UR_y + 1, isLookingObstacles);
+        Movement.travelTo(TN_UR_x, TN_UR_y + 1, isLookingObstacles);
         Movement.turnTo(-90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         Movement.turnTo(180.0);
         updateState(State.CROSSING);
-        Movement.goForward(Resources.toCM(bridgeSize + 2));
+        Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(90.0);
-        Movement.goForward(Resources.TILE_SIZE/2);
+        Movement.goForward(TILE_SIZE/2);
         
-        double fixedAngle = localize();
-        Resources.odometer.setXyt(Resources.toCM(Resources.TN_UR_x), Resources.toCM(Resources.TN_LL_y - 1), fixedAngle);
+        localize();
+        odometer.setXyt(toCM(TN_UR_x), toCM(TN_LL_y - 1), 0.0);
         
         updateState(State.TRAVELING);
         
       }
     }
+    /**The arrow is pointing towards the INIT_NORTH_ANGLE
+     * 3-->      |         2
+     *           |         |
+     *           |         V
+     *           |
+     * __________|__________
+     *           |          
+     *           |
+     * ^         |
+     * |         |
+     * 0         |     <-- 1       
+     */
+    Movement.travelTo(INITPOS_x, INITPOS_y, isLookingObstacles);
     
-    Movement.travelTo(Resources.INITPOS_x, Resources.INITPOS_y, isLookingObstacles);
-    Movement.turnTo(90);
-    Movement.goForward(xBeginCoord);
-    Movement.turnTo(180);
-    Movement.goForward(yBeginCoord);
+    Movement.turnTo(INIT_NORTH_ANGLE);
+    Movement.turnBy(-90.0);
+    Movement.goForward(TILE_SIZE - xBeginCoord);
+    Movement.turnBy(-90.0);
+    Movement.goForward(TILE_SIZE - yBeginCoord);
     //Movement.stopMotors();
   }
   
@@ -409,6 +513,44 @@ public class Robot {
     for (int i = 0; i<times; i++) {
       Sound.beep();
     }
+  }
+  
+  public static void orientPerpendicular() {
+    double initDist;
+    double finalDist;
+    double diff;
+    double angle;
+    
+    initDist = UltrasonicSensor.getDistance();
+    Movement.turnBy(-90.0);
+    Movement.goForward(8.0);
+    Movement.turnBy(90.0);
+    finalDist = UltrasonicSensor.getDistance();
+    
+    if (finalDist < TILE_SIZE) {
+      diff = finalDist - initDist;
+      angle = 90.0 + Math.toDegrees(Math.atan(diff/8.0));
+      if (angle < 0) {
+        Movement.turnBy(90.0);
+        Movement.goForward(8.0);
+      }
+      
+    } else {
+      Movement.turnBy(90.0);
+      Movement.goForward(16.0);
+      finalDist = UltrasonicSensor.getDistance();
+      
+      diff = finalDist - initDist;
+      angle = 90.0 + Math.atan(diff/8.0);
+      if (angle > 0) {
+        Movement.turnBy(90.0);
+        Movement.goForward(8.0);
+      }
+      
+    }
+
+    Movement.turnTo(angle);
+    
   }
   
   /**

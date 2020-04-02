@@ -146,10 +146,16 @@ public class Resources {
   public static int SZ_UR_y = -1;
   
   /**
+   * Largest point on map
+   */
+  public static int MAP_x = chooseLargest(Wifi.RED_UR_x, Wifi.GREEN_UR_x, Wifi.Island_UR_x);
+  public static int MAP_y = chooseLargest(Wifi.RED_UR_y, Wifi.GREEN_UR_y, Wifi.Island_UR_y);
+  /**
    * Initial position coordinates
    */
   public static int INITPOS_x = -1;
   public static int INITPOS_y = -1;
+  public static double INIT_NORTH_ANGLE = -1;
   
   /**
    * The odometer.
@@ -171,6 +177,11 @@ public class Resources {
    * The right motor.
    */
   public static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(MotorPort.D);
+  
+  /**
+   * The hooking motor.
+   */
+  public static final EV3LargeRegulatedMotor raiseMotor = new EV3LargeRegulatedMotor(MotorPort.B);
   
   /**
    * The right light sensor for localization
@@ -199,17 +210,17 @@ public class Resources {
   /**
    * Instantiation of sampler object for the right light sensor
    */
-  public static final LightSensor rightLightSensor = new LightSensor(LIGHT_SENSOR_RIGHT, "Red");
+  public static final LightPoller rightLightPoller = new LightPoller(LIGHT_SENSOR_RIGHT, "Red");
   
   /**
    * Instantiation of sampler object for the left light sensor
    */
-  public static final LightSensor leftLightSensor = new LightSensor(LIGHT_SENSOR_LEFT, "Red");
+  public static final LightPoller leftLightPoller = new LightPoller(LIGHT_SENSOR_LEFT, "Red");
   
   /**
    * Instantiation of sampler object for the color detection light sensor
    */
-  public static final LightSensor colorLightSensor = new LightSensor(LIGHT_SENSOR_COLOR, "RGB");
+  public static final LightPoller colorLightPoller = new LightPoller(LIGHT_SENSOR_COLOR, "RGB");
   
   /**
    * Convert a tile size into cm
@@ -221,6 +232,12 @@ public class Resources {
   public static void setInitPos(int x, int y) {
     INITPOS_x = x;
     INITPOS_y = y;
+  }
+
+  private static int chooseLargest(int rCoord, int gCoord, int iCoord) {
+    int temp = (rCoord > gCoord) ? rCoord : gCoord;
+    temp = (temp > iCoord) ? temp : iCoord;
+    return temp;
   }
   
 }

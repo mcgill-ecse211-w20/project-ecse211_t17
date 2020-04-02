@@ -44,33 +44,35 @@ public class Wifi {
   /**
    * Green area coordinates
    */
-  public final static int GREEN_LL_x = 0;
-  public final static int GREEN_LL_y = 5;
-  public final static int GREEN_UR_x = 4;
-  public final static int GREEN_UR_y = 9;
+  public final static int GREEN_LL_x = 10;
+  public final static int GREEN_LL_y = 0;
+  public final static int GREEN_UR_x = 15;
+  public final static int GREEN_UR_y = 4;
   
   /**
    * Red search area coordinates
    */
-  public final static int SZR_LL_x = 0;
+  public final static int SZR_LL_x = 6;
   public final static int SZR_LL_y = 5;
-  public final static int SZR_UR_x = 4;
-  public final static int SZR_UR_y = 9;
+  public final static int SZR_UR_x = 9;
+  public final static int SZR_UR_y = 8;
   
   /**
    * Green area coordinates
    */
-  public final static int SZG_LL_x = 0;
-  public final static int SZG_LL_y = 5;
-  public final static int SZG_UR_x = 4;
+  public final static int SZG_LL_x = 12;
+  public final static int SZG_LL_y = 6;
+  public final static int SZG_UR_x = 15;
   public final static int SZG_UR_y = 9;
   
   /**
    * Island coordinates
    */
-  public final static int Island_LL_x = 0;
+  public final static int Island_LL_x = 6;
   public final static int Island_LL_y = 5;
-  public final static int Island_UR_x = 4;
+  public final static int Island_UR_x = 15;
   public final static int Island_UR_y = 9;
+  
+  
  
 }

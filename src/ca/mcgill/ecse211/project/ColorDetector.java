@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.project;
 
-import ca.mcgill.ecse211.project.Resources.Team;
+import static ca.mcgill.ecse211.project.Resources.*;
 
 /**
  * Class that has a reference to the colour light sensor to detect colour and return the normalized value
@@ -20,13 +20,13 @@ public class ColorDetector {
 
   // rgb color data in the order of {R,G,B}
 
-  public static double[] RED_COLOR = {0.959771, 0.26671, 0.08776}; // value of red color
-  public static double[] GREEN_COLOR = {0.398574, 0.904758, 0.15017}; // value of green color
-  public static double[] BLUE_COLOR = {0.149069, 0.780432, 0.60721}; // value of blue color
-  public static double[] YELLOW_COLOR = {0.82158, 0.55636, 0.1244}; // value of yellow color
+  public static float[] RED_COLOR = {(float) 0.959771, (float) 0.26671, (float) 0.08776}; // value of red color
+  public static float[] GREEN_COLOR = {(float) 0.398574, (float) 0.904758, (float) 0.15017}; // value of green color
+  public static float[] BLUE_COLOR = {(float) 0.149069, (float) 0.780432, (float) 0.60721}; // value of blue color
+  public static float[] YELLOW_COLOR = {(float) 0.82158, (float)0.55636, (float)0.1244}; // value of yellow color
 
 
-  public static final float[] sampleColor = new float[100]; // create an array for the sensor
+  public static float[] sampleColor = new float[100]; // create an array for the sensor
 
 
   private static double smallest = 1; // the max possible value for a normalized reading is 1    
@@ -39,20 +39,45 @@ public class ColorDetector {
    * 
    * @return int color
    */
-  public static Team DetectColor() {
+  public static int DetectColor() {
     
-    int colour;
-    Team colorT;
-    
-    colour = 0;
-    
-    if (colour == 0) {
-      colorT = Team.RED;
-    } else {
-      colorT = Team.GREEN;
+ // obtain reading from sensor and normalize them
+    sampleColor = colorLightPoller.getColours();
+    double r = rNormalize(sampleColor[0] * 1000, sampleColor[1] * 1000, sampleColor[2] * 1000);
+    double g = gNormalize(sampleColor[0] * 1000, sampleColor[1] * 1000, sampleColor[2] * 1000);
+    double b = bNormalize(sampleColor[0] * 1000, sampleColor[1] * 1000, sampleColor[2] * 1000);
+
+    // get euclidean distance for each color
+    double dBlue = euclidean(r, g, b, BLUE_COLOR[RED_INDEX], BLUE_COLOR[GREEN_INDEX], BLUE_COLOR[BLUE_INDEX]);
+    double dGreen = euclidean(r, g, b, GREEN_COLOR[RED_INDEX], GREEN_COLOR[GREEN_INDEX], GREEN_COLOR[BLUE_INDEX]);
+    double dYellow = euclidean(r, g, b, YELLOW_COLOR[RED_INDEX], YELLOW_COLOR[GREEN_INDEX], YELLOW_COLOR[BLUE_INDEX]);
+    double dRed = euclidean(r, g, b, RED_COLOR[RED_INDEX], RED_COLOR[GREEN_INDEX], RED_COLOR[BLUE_INDEX]);
+
+    // rank the distances and choose the color --smallest euclidean
+    double[] d = {dBlue, dGreen, dYellow, dRed};
+    for (int i = 0; i < 4; i++) {
+      if (i == 0)
+        smallest = d[i];
+      else if (d[i] < smallest)
+        smallest = d[i];
     }
-    
-    return colorT;
+
+    /// return the TR value
+    if (smallest <= colorThreshold) {
+      if (smallest == dRed) {
+        return 0; // return red
+      }
+      if (smallest == dGreen) {
+        return 1; // return green
+      }
+      if (smallest == dBlue) {
+        return 2; // return blue
+      }
+      if (smallest == dYellow) {
+        return 3; // return yellow
+      }
+    }
+    return -1;
   }
   
   /**
@@ -110,20 +135,21 @@ public class ColorDetector {
    * Calibrate the values for the colour red
    */
   public static void rCalibrate() {
-    
+    RED_COLOR = colorLightPoller.getColours();
   }
   
   /**
    * Calibrate the values for the colour green
    */
   public static void gCalibrate() {
-    
+    GREEN_COLOR = colorLightPoller.getColours();
   }
   
-  /**
-   * Calibrate the values for the colour blue
-   */
+  public static void yCalibrate() {
+    YELLOW_COLOR = colorLightPoller.getColours();
+  }
+  
   public static void bCalibrate() {
-    
+    BLUE_COLOR = colorLightPoller.getColours();
   }
 }
