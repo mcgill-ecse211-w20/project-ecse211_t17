@@ -1,5 +1,8 @@
 package ca.mcgill.ecse211.project;
 
+import java.math.BigDecimal;
+import java.util.Map;
+import ca.mcgill.ecse211.wificlient.WifiConnection;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
@@ -8,7 +11,8 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 
 /**
  * This class is used to define static resources in one place for easy access and to avoid cluttering the rest of the
- * codebase. All resources can be imported at once like this:
+ * codebase. All values are either initialized here or in Robot.initialize(). 
+ * All resources can be imported at once like this:
  * 
  * <p>
  * {@code import static ca.mcgill.ecse211.lab3.Resources.*;}
@@ -21,6 +25,34 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
  * 
  */
 public class Resources {
+  
+  /**
+   * The default server IP used by the profs and TA's.
+   */
+  public static final String DEFAULT_SERVER_IP = "192.168.2.3";
+  
+  /**
+   * The IP address of the server that transmits data to the robot. For the beta demo and
+   * competition, replace this line with
+   * 
+   * <p>{@code public static final String SERVER_IP = DEFAULT_SERVER_IP;}
+   */
+  public static final String SERVER_IP = "192.168.2.3"; // = DEFAULT_SERVER_IP;
+  
+  /**
+   * Your team number.
+   */
+  public static final int TEAM_NUMBER = 17;
+  
+  /** 
+   * Enables printing of debug info from the WiFi class. 
+   */
+  public static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
+  
+  /**
+   * Enable this to attempt to receive Wi-Fi parameters at the start of the program.
+   */
+  public static final boolean RECEIVE_WIFI_PARAMS = true;
 
   /**
    * Wheel ratio
@@ -28,9 +60,12 @@ public class Resources {
   private static final double RATIO = 0.9976;
   
   /**
-   * The wheel radius in centimeters.
+   * The left wheel radius in centimeters.
    */
   public static final double WHEEL_RAD_LEFT = 2.130;
+  /**
+   * The right wheel radius in centimeters
+   */
   public static final double WHEEL_RAD_RIGHT = 2.130;
 
   /**
@@ -98,6 +133,10 @@ public class Resources {
    */
   public static final double DETECTION_DISTANCE = 3.5;
 
+  /**
+   * Enum to recognize team colours
+   *
+   */
   public enum Team { GREEN, RED };
   /**
    * Team storing details
@@ -107,54 +146,81 @@ public class Resources {
   /**
    * Starting corner number
    */
-  public static int corner = -1;
+  public static double corner = -1;
   
   /**
-   * Tunnel lower left coordinates
+   * Tunnel lower left x coordinate specific to team
    */
-  public static int TN_LL_x = -1;
-  public static int TN_LL_y = -1;
+  public static double TN_LL_x = -1;
+  /**
+   * Tunnel lower left y coordinate specific to team
+   */
+  public static double TN_LL_y = -1;
   
   /**
-   * Tunnel upper right coordinates
+   * Tunnel upper right x coordinate specific to team
    */
-  public static int TN_UR_x = -1;
-  public static int TN_UR_y = -1;
+  public static double TN_UR_x = -1;
+  /**
+   * Tunnel upper right y coordinate specific to team
+   */
+  public static double TN_UR_y = -1;
   
   /**
-   * Home area lower left coordinates
+   * Home area lower left x coordinate specific to team 
    */
-  public static int HOME_LL_x = -1;
-  public static int HOME_LL_y = -1;
+  public static double HOME_LL_x = -1;
+  /**
+   * Home area lower left y coordinate specific to team 
+   */
+  public static double HOME_LL_y = -1;
   
   /**
-   * Home area upper right coordinates
+   * Home area upper right x coordinate specific to team
    */
-  public static int HOME_UR_x = -1;
-  public static int HOME_UR_y = -1;
+  public static double HOME_UR_x = -1;
+  /**
+   * Home area upper right y coordinate specific to team
+   */
+  public static double HOME_UR_y = -1;
   
   /**
-   * Search area lower left coordinates
+   * Search area lower left x coordinate specific to team
    */
-  public static int SZ_LL_x = -1;
-  public static int SZ_LL_y = -1;
+  public static double SZ_LL_x = -1;
+  /**
+   * Search area lower left y coordinate specific to team
+   */
+  public static double SZ_LL_y = -1;
   
   /**
-   * Search area lower left coordinates
+   * Search area lower left x coordinate specific to team
    */
-  public static int SZ_UR_x = -1;
-  public static int SZ_UR_y = -1;
+  public static double SZ_UR_x = -1;
+  /**
+   * Search area lower left y coordinate specific to team
+   */
+  public static double SZ_UR_y = -1;
   
   /**
-   * Largest point on map
+   * Largest point on map x coordinate
    */
-  public static int MAP_x = chooseLargest(Wifi.RED_UR_x, Wifi.GREEN_UR_x, Wifi.Island_UR_x);
-  public static int MAP_y = chooseLargest(Wifi.RED_UR_y, Wifi.GREEN_UR_y, Wifi.Island_UR_y);
+  public static double MAP_x = chooseLargest(Wifi.RED_UR_x, Wifi.GREEN_UR_x, Wifi.Island_UR_x);
   /**
-   * Initial position coordinates
+   * Largest point on map y coordinate
    */
-  public static int INITPOS_x = -1;
-  public static int INITPOS_y = -1;
+  public static double MAP_y = chooseLargest(Wifi.RED_UR_y, Wifi.GREEN_UR_y, Wifi.Island_UR_y);
+  /**
+   * Initial position coordinate x in tile size coordinate specific to team
+   */
+  public static double INITPOS_x = -1;
+  /**
+   * Initial position coordinate y in tile size coordinate specific to team
+   */
+  public static double INITPOS_y = -1;
+  /**
+   * Initial angle when the robot was facing north according to the actual north in degrees
+   */
   public static double INIT_NORTH_ANGLE = -1;
   
   /**
@@ -225,19 +291,130 @@ public class Resources {
   /**
    * Convert a tile size into cm
    */
-  public static double toCM (int tileSize) {
+  public static double toCM (double tileSize) {
     return tileSize * TILE_SIZE;
   }
   
-  public static void setInitPos(int x, int y) {
+  /**
+   * Setting the initial positions of the robot according after it reaches the nearest intersection
+   * 
+   * @param x in tile size coordinate 
+   * @param y in tile size coordinate
+   */
+  public static void setInitPos(double x, double y) {
     INITPOS_x = x;
     INITPOS_y = y;
   }
-
+  
+  /**
+   * Choose the largest value among the parameters and return it
+   * 
+   * @param rCoord coordinate from the red area in tile size coordinate
+   * @param gCoord coordinate from the green area in tile size coordinate
+   * @param iCoord coordinate from the island area in tile size coordinate
+   * 
+   * @return the largest coordinate from the parameter in tile size coordinate
+   */
   private static int chooseLargest(int rCoord, int gCoord, int iCoord) {
     int temp = (rCoord > gCoord) ? rCoord : gCoord;
     temp = (temp > iCoord) ? temp : iCoord;
     return temp;
+  }
+  
+  /**
+   * Container for the Wi-Fi parameters.
+   */
+  public static Map<String, Object> wifiParameters;
+  
+  // This static initializer MUST be declared before any Wi-Fi parameters.
+  static {
+    receiveWifiParameters();
+  }
+  
+  /** Red team number. */
+  public static int redTeam = getWP("RedTeam");
+
+  /** Red team's starting corner. */
+  public static int redCorner = getWP("RedCorner");
+
+  /** Green team number. */
+  public static int greenTeam = getWP("GreenTeam");
+
+  /** Green team's starting corner. */
+  public static int greenCorner = getWP("GreenCorner");
+
+  /** The Red Zone. */
+  public static Region red = makeRegion("Red");
+
+  /** The Green Zone. */
+  public static Region green = makeRegion("Green");
+
+  /** The Island. */
+  public static Region island = makeRegion("Island");
+
+  /** The red tunnel footprint. */
+  public static Region tnr = makeRegion("TNR");
+
+  /** The green tunnel footprint. */
+  public static Region tng = makeRegion("TNG");
+
+  /** The red search zone. */
+  public static Region szr = makeRegion("SZR");
+
+  /** The green search zone. */
+  public static Region szg = makeRegion("SZG");
+  
+  /**
+   * Receives Wi-Fi parameters from the server program.
+   */
+  public static void receiveWifiParameters() {
+    // Only initialize the parameters if needed
+    if (!RECEIVE_WIFI_PARAMS || wifiParameters != null) {
+      return;
+    }
+    System.out.println("Waiting to receive Wi-Fi parameters.");
+
+    // Connect to server and get the data, catching any errors that might occur
+    try (WifiConnection conn =
+        new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT)) {
+      /*
+       * getData() will connect to the server and wait until the user/TA presses the "Start" button
+       * in the GUI on their laptop with the data filled in. Once it's waiting, you can kill it by
+       * pressing the back/escape button on the EV3. getData() will throw exceptions if something
+       * goes wrong.
+       */
+      wifiParameters = conn.getData();
+    } catch (Exception e) {
+      System.err.println("Error: " + e.getMessage());
+    }
+  }
+  
+  /**
+   * Returns the Wi-Fi parameter int value associated with the given key.
+   * 
+   * @param key the Wi-Fi parameter key
+   * @return the Wi-Fi parameter int value associated with the given key
+   */
+  public static int getWP(String key) {
+    if (wifiParameters != null) {
+      return ((BigDecimal) wifiParameters.get(key)).intValue();
+    } else {
+      return 0;
+    }
+  }
+  
+  /** 
+   * Makes a point given a Wi-Fi parameter prefix.
+   */
+  public static Point makePoint(String paramPrefix) {
+    return new Point(getWP(paramPrefix + "_x"), getWP(paramPrefix + "_y"));
+  }
+  
+  /**
+   * Makes a region given a Wi-Fi parameter prefix.
+   */
+  public static Region makeRegion(String paramPrefix) {
+    return new Region(makePoint(paramPrefix + "_LL"), makePoint(paramPrefix + "_UR"));
   }
   
 }

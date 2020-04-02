@@ -1,5 +1,11 @@
 package ca.mcgill.ecse211.project;
 
+import static ca.mcgill.ecse211.project.Main.sleepFor;
+import static ca.mcgill.ecse211.project.Resources.BASE_WIDTH;
+import static ca.mcgill.ecse211.project.Resources.WHEEL_RAD_LEFT;
+import static ca.mcgill.ecse211.project.Resources.WHEEL_RAD_RIGHT;
+import static ca.mcgill.ecse211.project.Resources.leftMotor;
+import static ca.mcgill.ecse211.project.Resources.rightMotor;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -82,7 +88,7 @@ public class Odometer {
    * Default constructor for this class so it returns a singleton
    */
   private Odometer() {
-    
+    setXyt(0, 0, 0);
   }
   
   /**
@@ -90,16 +96,72 @@ public class Odometer {
    * @return the Odometer object
    */
   public static synchronized Odometer getOdometer() {
-    return new Odometer();
+    if (odo == null) {
+      odo = new Odometer();
+    }
+
+    return odo;
   }
   
   /**
-   * Method where the logic for the odometer will run and update all the values
+   * Starts a new odometer thread 
    */
   public void start() {
     (new Thread() {
       public void run() {
+        long updateStart;
+        long updateDuration;
         
+
+        while (true) {
+          updateStart = System.currentTimeMillis();
+
+          // Calculate new robot position based on tachometer counts
+          leftMotorTachoCount = leftMotor.getTachoCount();
+          rightMotorTachoCount = rightMotor.getTachoCount();
+
+          // Update odometer values with new calculated values using update()
+          double distL; //distance traveled on left wheel
+          double distR; //distance traveled on right wheel
+          double deltaD; //Vehicle displacement
+          double deltaT; //degrees that it rotated
+          double dX; //on the board the x displacement
+          double dY; // the y displacement on the board
+
+          // compute L and R wheel displacements
+          distL = Math.PI * WHEEL_RAD_LEFT * (leftMotorTachoCount - lastTachoCountL) / 180;
+          distR = Math.PI * WHEEL_RAD_RIGHT * (rightMotorTachoCount - lastTachoCountR) / 180;
+          
+
+          lastTachoCountL = leftMotorTachoCount; // save tacho counts for next iteration
+          lastTachoCountR = rightMotorTachoCount;
+
+          deltaD = 0.5 * (distL + distR); // compute vehicle displacement
+          deltaT = ((distL - distR) / BASE_WIDTH) * 180 / Math.PI; // convert radians to degrees
+
+          dX = deltaD * Math.sin(theta * Math.PI / 180); // compute X component of displacement
+          dY = deltaD * Math.cos(theta * Math.PI / 180); // compute Y component of displacement
+
+          //update(dX, dY, deltaT); // update data on LCD screen
+          
+          theta += deltaT; // Update direction
+          
+          //Make sure that the angles will wrap back
+          if (theta < -360) {
+            theta += 360;
+          } else if (theta > 360) {
+            theta -= 360;
+          }
+          
+          x = x + dX; // Update estimates of X and Y position
+          y = y + dY;
+
+          // this ensures that the odometer only runs once every period
+          updateDuration = System.currentTimeMillis() - updateStart;
+          if (updateDuration < ODOMETER_PERIOD) {
+            sleepFor(ODOMETER_PERIOD - updateDuration);
+          }
+        }
       }
     }).start();
   }
@@ -113,6 +175,22 @@ public class Odometer {
    * @return the odometer in an array
    */
   public double[] getXyt() {
+    double[] position = new double[5];
+    lock.lock();
+    try {
+      while (isResetting) { // If a reset operation is being executed, wait until it is over.
+        doneResetting.await(); // Using await() is lighter on the CPU than simple busy wait.
+      }
+
+      position[0] = x;
+      position[1] = y;
+      position[2] = theta;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      lock.unlock();
+    }
+
     return position;
   }
   
@@ -121,7 +199,20 @@ public class Odometer {
    * @return the current x value
    */
   public double getX() {
-    return x;
+    double value = 0;
+    lock.lock();
+    try {
+      while (isResetting) { // If a reset operation is being executed, wait until it is over.
+        doneResetting.await(); // Using await() is lighter on the CPU than simple busy wait.
+      }
+
+      value = x;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      lock.unlock();
+    }
+    return value;
   }
   
   /**
@@ -129,7 +220,20 @@ public class Odometer {
    * @return the current y value
    */
   public double getY() {
-    return y;
+    double value = 0;
+    lock.lock();
+    try {
+      while (isResetting) { // If a reset operation is being executed, wait until it is over.
+        doneResetting.await(); // Using await() is lighter on the CPU than simple busy wait.
+      }
+
+      value = y;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      lock.unlock();
+    }
+    return value;
   }
   
   /**
@@ -137,7 +241,20 @@ public class Odometer {
    * @return the current theta value
    */
   public double getTheta() {
-    return theta;
+    double value = 0;
+    lock.lock();
+    try {
+      while (isResetting) { // If a reset operation is being executed, wait until it is over.
+        doneResetting.await(); // Using await() is lighter on the CPU than simple busy wait.
+      }
+
+      value = theta;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      lock.unlock();
+    }
+    return value;
   }
   
   /**
@@ -148,7 +265,17 @@ public class Odometer {
    * @param dtheta the change in theta
    */
   public void update(double dx, double dy, double dtheta) {
-  
+    lock.lock();
+    isResetting = true;
+    try {
+      x += dx;
+      y += dy;
+      theta = (theta + (360 + dtheta) % 360) % 360; // keeps the updates within 360 degrees
+      isResetting = false;
+      doneResetting.signalAll(); // Let the other threads know we are done resetting
+    } finally {
+      lock.unlock();
+    }
   }
   
   /**
@@ -159,7 +286,17 @@ public class Odometer {
    * @param theta the value of theta in degrees
    */
   public void setXyt(double x, double y, double theta) {
-    
+    lock.lock();
+    isResetting = true;
+    try {
+      this.x = x;
+      this.y = y;
+      this.theta = theta;
+      isResetting = false;
+      doneResetting.signalAll();
+    } finally {
+      lock.unlock();
+    }
   }
   
   /**
@@ -168,7 +305,15 @@ public class Odometer {
    * @param x the value of x
    */
   public void setX(double x) {
-    
+    lock.lock();
+    isResetting = true;
+    try {
+      this.x = x;
+      isResetting = false;
+      doneResetting.signalAll();
+    } finally {
+      lock.unlock();
+    }
   }
   
   /**
@@ -177,7 +322,15 @@ public class Odometer {
    * @param y the value of y
    */
   public void setY(double y) {
-    
+    lock.lock();
+    isResetting = true;
+    try {
+      this.y = y;
+      isResetting = false;
+      doneResetting.signalAll();
+    } finally {
+      lock.unlock();
+    }
   }
   
   /**
@@ -186,7 +339,15 @@ public class Odometer {
    * @param theta the value of theta
    */
   public void setTheta(double theta) {
-    
+    lock.lock();
+    isResetting = true;
+    try {
+      this.theta = theta;
+      isResetting = false;
+      doneResetting.signalAll();
+    } finally {
+      lock.unlock();
+    }
   }
 }
 

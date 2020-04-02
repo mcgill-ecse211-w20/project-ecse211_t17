@@ -5,8 +5,8 @@ import lejos.hardware.Button;
 import static ca.mcgill.ecse211.project.Resources.*;
 
 /**
- * Main class where the main thread will be started. All actions will be done via the Main class,
- * with the robot object as intermediate
+ * Main class is the main entry point of the robot. All it does is calling the Robot static class to perform all actions
+ * like moving around or beeping.
  * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
@@ -19,17 +19,16 @@ public class Main {
   
   /**
    * Main thread will start here and sequentially start and stop new threads as needed.
-   * This method calls the robot object to perform specific tasks
+   * This method calls robot to perform specific tasks
    * 
    */
   public static void main(String[] args) {
-    
-    int click;
-    
-    //start download wifi class 
+        
+    //start the odometer thread
     odometer.start();
     
-    click = Button.waitForAnyPress();
+    //storing the of the button
+    int click = Button.waitForAnyPress();
     
     //Set for debugging purposes
     while (click != Button.ID_ESCAPE) {

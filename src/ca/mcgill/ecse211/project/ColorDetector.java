@@ -3,7 +3,8 @@ package ca.mcgill.ecse211.project;
 import static ca.mcgill.ecse211.project.Resources.*;
 
 /**
- * Class that has a reference to the colour light sensor to detect colour and return the normalized value
+ * Class that has a reference to the colour light sensor to calibrate the initial colours and then detect which colours
+ * it is using the mean and standard deviation for initial colours
  * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
@@ -13,31 +14,55 @@ import static ca.mcgill.ecse211.project.Resources.*;
  *
  */
 public class ColorDetector {
-  //RGB indexes
+  /**
+   * Red index in the values array
+   */
   private static final int RED_INDEX = 0;
+  /**
+   * Green index in the values array
+   */
   private static final int GREEN_INDEX = 1;
+  /**
+   * Blue index in the values array
+   */
   private static final int BLUE_INDEX = 2;
 
-  // rgb color data in the order of {R,G,B}
-
-  public static float[] RED_COLOR = {(float) 0.959771, (float) 0.26671, (float) 0.08776}; // value of red color
-  public static float[] GREEN_COLOR = {(float) 0.398574, (float) 0.904758, (float) 0.15017}; // value of green color
-  public static float[] BLUE_COLOR = {(float) 0.149069, (float) 0.780432, (float) 0.60721}; // value of blue color
-  public static float[] YELLOW_COLOR = {(float) 0.82158, (float)0.55636, (float)0.1244}; // value of yellow color
-
-
-  public static float[] sampleColor = new float[100]; // create an array for the sensor
-
-
-  private static double smallest = 1; // the max possible value for a normalized reading is 1    
-  private static double colorThreshold = 0.2; // all correct readings are smaller than thus thresold, obtained in the
-                                             // color sampling process
+  /**
+   * RGB values for the colour red
+   */
+  public static float[] RED_COLOR = {(float) 0.959771, (float) 0.26671, (float) 0.08776};
+  /**
+   * RGB values for the colour green
+   */
+  public static float[] GREEN_COLOR = {(float) 0.398574, (float) 0.904758, (float) 0.15017}; 
+  /**
+   * RGB values for the colour blue
+   */
+  public static float[] BLUE_COLOR = {(float) 0.149069, (float) 0.780432, (float) 0.60721};
+  /**
+   * RGB values for the colour yellow
+   */
+  public static float[] YELLOW_COLOR = {(float) 0.82158, (float)0.55636, (float)0.1244};
   
   /**
-   * Calculates the mean and standard deviation for the initial readings and call color() method for
-   * telling what the color is where 0=red, 1=green, 2=blue, 3=yellow, and -1 for everything else
+   * Storage for the current detected colour
+   */
+  public static float[] sampleColor = new float[100];
+
+  /**
+   * the max possible value for a normalized reading is 1  
+   */
+  private static double smallest = 1;
+  /**
+   * all correct readings are smaller than thus thresold, obtained in the
+   * color sampling process
+   */
+  private static double colorThreshold = 0.2;
+  
+  /**
+   * Calculates the mean and standard deviation for the initial readings returns what the color is detected
    * 
-   * @return int color
+   * @return int where 0=red, 1=green, 2=blue, 3=yellow, and -1 for everything else
    */
   public static int DetectColor() {
     
@@ -132,23 +157,29 @@ public class ColorDetector {
   }
   
   /**
-   * Calibrate the values for the colour red
+   * Calibrate the RGB values for the colour red. This is done just before starting the competition
    */
   public static void rCalibrate() {
     RED_COLOR = colorLightPoller.getColours();
   }
   
   /**
-   * Calibrate the values for the colour green
+   * Calibrate the RGB values for the colour green. This is done just before starting the competition
    */
   public static void gCalibrate() {
     GREEN_COLOR = colorLightPoller.getColours();
   }
   
+  /**
+   * Calibrate the RGB values for the colour yellow. This is done just before starting the competition
+   */
   public static void yCalibrate() {
     YELLOW_COLOR = colorLightPoller.getColours();
   }
   
+  /**
+   * Calibrate the RGB values for the colour blue. This is done just before starting the competition
+   */
   public static void bCalibrate() {
     BLUE_COLOR = colorLightPoller.getColours();
   }

@@ -9,9 +9,9 @@ import static ca.mcgill.ecse211.project.Resources.*;
  * Class that performs all the ultrasonic behaviour:
  * <p>
  * <ul>
- * <li>Finding the 0 degrees
+ * <li>Finds the 0 degrees
  * <li>Filters the data from the sensor
- * <li>Returns any distances from the sensor
+ * <li>Avoids obstacles
  * </ul>
  * <p>
  *
@@ -22,12 +22,12 @@ import static ca.mcgill.ecse211.project.Resources.*;
  * @author Ariane Leroux
  *
  */
-
 public class UltrasonicSensor {
 
   // Initialize starting variables
 
-  private static float[] usData = new float[US_SENSOR.getMode("Distance").sampleSize()];;
+  private static float[] usData = new float[US_SENSOR.getMode("Distance").sampleSize()];
+  
   /**
    * Enumeration for which direction the robot should turn, i.e. Clockwise or Counter-clockwise
    *
@@ -45,9 +45,9 @@ public class UltrasonicSensor {
   private static Odometer odometer = Resources.odometer;
 
   /**
-   * Method to create a thread that will run while in the search zone to poll the distance from the Ultrasonic Distance
+   * Method to create a thread that will run while on the island to poll the distance from the Ultrasonic Distance
    */
-  public static void usSensorPoller() {
+  public static void startUsSensorPoller() {
     (new Thread() {
       public void run() {
         while (Robot.isLookingObstacles || Robot.isSearching) {
@@ -67,7 +67,7 @@ public class UltrasonicSensor {
 
 
   /**
-   * Method that find the 0deg according to whichever orientation
+   * Finds the 0deg if the robot is set in a corner by using the falling edge method
    */
   public static void reorient() {
 
@@ -92,7 +92,8 @@ public class UltrasonicSensor {
   }
 
   /**
-   * Method to move the robot to (1,1) using the ultrasonic sensor
+   * Method to move the robot to the nearest intersection of tile lines using the ultrasonic sensor
+   * and readjusts the 0deg by considering the starting corner
    */
   public static void moveToOrigin() {
     // The x and y coordinates of (1,1) according to the current location of the robot
@@ -189,7 +190,8 @@ public class UltrasonicSensor {
   }
 
   /**
-   * Move the robot around an obstacle
+   * Move the robot around an obstacle by avoiding from the rock's right side. Periodically checks if it came back to 
+   * the same line it was on.
    * 
    */
   public static void avoid() {
@@ -233,11 +235,24 @@ public class UltrasonicSensor {
       } while (getCurrentSlope() > orientation);
     }
   }
-
+  
+  /**
+   * Helper method used by avoid() that compares two angles and checks if the first angle is within a 4.0 range 
+   * of the wanted angle
+   * 
+   * @param comparedAngle in degrees of the uncertain angle
+   * @param wantedAngle in degrees of the angle that it's trying to reach
+   * @return true if it is within the margin
+   */
   private static boolean isWithin(double comparedAngle, double wantedAngle) {
     return (comparedAngle < wantedAngle + 2.0 && comparedAngle > wantedAngle - 2.0);
   }
-
+  
+  /**
+   * Helper method used by avoid() that checks if the wall on the left of the robot is still there or not
+   * 
+   * @return true if the wall is close
+   */
   private static boolean isClose() {
     Movement.turnBy(-90.0);
     boolean isClose = getDistance() <= DETECTION_DISTANCE;
@@ -245,6 +260,10 @@ public class UltrasonicSensor {
     return isClose;
   }
   
+  /**
+   * Helper method used by avoid() that checks the current slope of the robot tilt according to the origin 
+   * @return
+   */
   private static double getCurrentSlope() {
     return odometer.getY()/odometer.getX();
   }
@@ -279,6 +298,11 @@ public class UltrasonicSensor {
 
   }
 
+  /**
+   * Obtains the distance measured by the poller
+   * 
+   * @return the distance measured by the poller
+   */
   public static double getDistance() {
     return distance;
   }

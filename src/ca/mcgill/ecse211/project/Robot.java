@@ -4,8 +4,8 @@ import static ca.mcgill.ecse211.project.Resources.*;
 import lejos.hardware.Sound;
 
 /**
- * Intermediate between the main class and the other classes.
- * Implemented using a state machine to determine which methods to call in what state
+ * Static class that coordinates all actions by using the other resources.
+ * Implemented using a state machine to help the pollers determining when they should stop.
  * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
@@ -17,7 +17,7 @@ import lejos.hardware.Sound;
 public class Robot {
   
   /**
-   * Enumeration class listing the five states the robot can be ins
+   * Enumeration class listing the five states the robot can be in
    *
    */
   public enum State {
@@ -28,6 +28,21 @@ public class Robot {
     SEARCHING,
     IDENTIFICATION
   }
+  
+  /**
+   * Current state of the robot
+   */
+  public static State robotStatus;
+  
+  /**
+   * orientation of bridge
+   */
+  private enum Direction { Vertical, Horizontal };
+  
+  /**
+   * actual orientation of bridge
+   */
+  public static Direction direction;
   
   // booleans to regulate the running of Threads
   /**
@@ -46,24 +61,29 @@ public class Robot {
   public static boolean isSearching;
   
   /**
-   * Current state of the robot
-   */
-  public static State robotStatus;
-  
-  /**
    * Set to true if it's looking for obstacles
    */
   public static boolean isLookingObstacles;
   
   /**
-   * orientation of bridge
+   * Set to true once the robot found the cart
    */
-  private enum Direction { Vertical, Horizontal };
+  private static boolean foundCart;
   
   /**
-   * actual orientation of bridge
+   * Size of the bridge in tile size
    */
-  public static Direction direction;
+  private static double bridgeSize;
+  
+  /**
+   * Robot's initial x coordinate relative to the nearest corner
+   */
+  private static double xBeginCoord;
+  
+  /**
+   * Robot's initial y coordinate relative to the nearest corner
+   */
+  private static double yBeginCoord;
 
   /**
    * Initializing the state machine and the static references to various detection and movement objects
@@ -76,13 +96,6 @@ public class Robot {
     return new Robot();
   }
   
-  private static boolean foundCart;
-  
-//in coordinate system
-  private static int bridgeSize;
-  
-  private static double xBeginCoord;
-  private static double yBeginCoord;
   
   /**
    * Updates the current state of the robot object as well as the corresponding booleans
@@ -133,52 +146,49 @@ public class Robot {
   
   
   /**
-   * Initializes the robot's position and orienting it so it faces 0deg
+   * Initializes the robot's position and imports all the wifi data
    */
   public static void initialize() {
     
-    int colour;
-    
     do {
-      colour = ColorDetector.DetectColor();
-      if (colour == 0) {
+      if (redTeam == TEAM_NUMBER) {
         
         team = Team.RED;
-        corner = Wifi.RedCorner;
+        corner = redCorner;
         
-        TN_LL_x = Wifi.TNR_LL_x;
-        TN_LL_y = Wifi.TNR_LL_y;
-        TN_UR_x = Wifi.TNR_UR_x;
-        TN_UR_y = Wifi.TNR_UR_y;
+        TN_LL_x = tnr.ll.x;
+        TN_LL_y = tnr.ll.y;
+        TN_UR_x = tnr.ur.x;
+        TN_UR_y = tnr.ur.y;
         
-        HOME_LL_x = Wifi.RED_LL_x;
-        HOME_LL_y = Wifi.RED_LL_y;
-        HOME_UR_x = Wifi.RED_UR_x;
-        HOME_UR_y = Wifi.RED_UR_y;
+        HOME_LL_x = red.ll.x;
+        HOME_LL_y = red.ll.y;
+        HOME_UR_x = red.ur.x;
+        HOME_UR_y = red.ur.y;
         
-        SZ_LL_x = Wifi.SZR_LL_x;
-        SZ_LL_y = Wifi.SZR_LL_y;
-        SZ_UR_x = Wifi.SZR_UR_x;
-        SZ_UR_y = Wifi.SZR_UR_y;
-      } else if (colour == 1) {
+        SZ_LL_x = szr.ll.x;
+        SZ_LL_y = szr.ll.y;
+        SZ_UR_x = szr.ur.x;
+        SZ_UR_y = szr.ur.y;
+      } else if (greenTeam == TEAM_NUMBER) {
         
         team = Team.GREEN;
         corner = Wifi.GreenCorner;
         
-        TN_LL_x = Wifi.TNG_LL_x;
-        TN_LL_y = Wifi.TNG_LL_y;
-        TN_UR_x = Wifi.TNG_UR_x;
-        TN_UR_y = Wifi.TNG_UR_y;
+        TN_LL_x = tng.ll.x;
+        TN_LL_y = tng.ll.y;
+        TN_UR_x = tng.ur.x;
+        TN_UR_y = tng.ur.y;
         
-        HOME_LL_x = Wifi.RED_LL_x;
-        HOME_LL_y = Wifi.RED_LL_y;
-        HOME_UR_x = Wifi.RED_UR_x;
-        HOME_UR_y = Wifi.RED_UR_y;
+        HOME_LL_x = green.ll.x;
+        HOME_LL_y = green.ll.y;
+        HOME_UR_x = green.ur.x;
+        HOME_UR_y = green.ur.y;
         
-        SZ_LL_x = Wifi.SZR_LL_x;
-        SZ_LL_y = Wifi.SZR_LL_y;
-        SZ_UR_x = Wifi.SZR_UR_x;
-        SZ_UR_y = Wifi.SZR_UR_y;
+        SZ_LL_x = szg.ll.x;
+        SZ_LL_y = szg.ll.y;
+        SZ_UR_x = szg.ur.x;
+        SZ_UR_y = szg.ur.y;
       }
       
     } while (team == null);
@@ -189,7 +199,9 @@ public class Robot {
   }
   
   /**
-   * Movement to search using the data from the Wifi class
+   * Moves the robot to the search area by taking into consideration the orientation of the bridge and from which entrance
+   * it should enter according to the imports from the Wifi class to the Resources class.
+   * After exiting the bridge, localizes itself using the lightsensors
    */
   public static void toSearch() {
     
@@ -210,6 +222,9 @@ public class Robot {
       bridgeSize = TN_UR_y - TN_LL_y;
     } 
     
+    leftLightPoller.start();
+    rightLightPoller.start();
+    
     if (direction == Direction.Horizontal) {
       //Starting corner is on the right
       if (corner == 1 || corner == 2) {
@@ -222,12 +237,12 @@ public class Robot {
         Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(180.0);
         Movement.goForward(TILE_SIZE/2);
-        
+                
+        updateState(State.ONISLAND);
+
         localize();
         odometer.setXyt(toCM(TN_LL_x -1), toCM(TN_LL_y), 0.0);
-        
-        updateState(State.ONISLAND);
-        
+        isNavigating = false;
         
       } else { //Starting corner is on the left
         Movement.travelTo(TN_LL_x - 1, TN_LL_y, isLookingObstacles);
@@ -238,12 +253,13 @@ public class Robot {
         Movement.goForward(toCM(bridgeSize + 2));
         Movement.turnTo(180.0);
         Movement.goForward(TILE_SIZE/2);
-        
-        localize();
-        odometer.setXyt(toCM(TN_UR_x  + 1), toCM(TN_LL_y), 0.0);
-        
+                
         updateState(State.ONISLAND);
         
+
+        localize();
+        odometer.setXyt(toCM(TN_UR_x  + 1), toCM(TN_LL_y), 0.0);
+        isNavigating = false;
       }
       
       
@@ -261,11 +277,12 @@ public class Robot {
         Movement.turnTo(90.0);
         Movement.goForward(TILE_SIZE/2);
         
-        localize();
-        odometer.setXyt(toCM(TN_UR_x), toCM(TN_LL_y - 1), 0.0);
         
         updateState(State.ONISLAND);
-        
+
+        localize();
+        odometer.setXyt(toCM(TN_UR_x), toCM(TN_LL_y - 1), 0.0);
+        isNavigating = false;
       } else { //Starting corner is below
         Movement.travelTo(TN_UR_x, TN_LL_y - 1, isLookingObstacles);
         Movement.turnTo(-90.0);
@@ -276,14 +293,16 @@ public class Robot {
         Movement.turnTo(90.0);
         Movement.goForward(TILE_SIZE/2);
         
-        localize();
-        odometer.setXyt(toCM(TN_UR_x), toCM(TN_UR_y + 1), 0.0);
         
         updateState(State.ONISLAND);
-        
+
+        localize();
+        odometer.setXyt(toCM(TN_UR_x), toCM(TN_UR_y + 1), 0.0);
+        isNavigating = false;
       }
     }
     
+    UltrasonicSensor.startUsSensorPoller();
     Movement.travelTo(SZ_LL_x, SZ_LL_y, isLookingObstacles);
     updateState(State.SEARCHING);
     beeps(3);
@@ -291,10 +310,13 @@ public class Robot {
   }
   
   /**
-   * Only localize according to the lightsensor
-   * Reason why not two same time from lightsensor is bc too many threads
+   * Helper method used after crossing the bridge to make sure the odometer is accurate.
+   * Uses the two lightsensors to detect the lines while rotating.
+   * 
+   * <b>Note: The reason why this method wasn't implemented in the LighPoller class to have a nonstatic method is because
+   * of the issue of too many threads</b>
    */
-  public static void localize() {
+  private static void localize() {
     Movement.turnTo(45);
     
     float rightValue = rightLightPoller.getColor();
@@ -360,12 +382,33 @@ public class Robot {
     Movement.turnTo(fixAngle(avgAngles[0], avgAngles[2]) +180.0);
   }
   
+  /**
+   * Helper method used by localize() to make any angle positive to facilitate calculations
+   * 
+   * @param angle to make positive in degrees
+   * @return the angle by making it positive in degrees
+   */
   private static double makePositive(double angle) {
     return (angle < 0) ? angle + 360 : angle;
   }
+  
+  /**
+   * Helper method used by localize() to make an angle smaller than 180
+   * 
+   * @param angle in degrees that needs to be checked
+   * @return the angle unmodified if it is already under 180, otherwise substract this angle from 360
+   */
   private static double makeObtuse(double angle) {
     return (angle > 180) ? 360-angle : angle;
   }
+  
+  /**
+   * Helper method used by localize() to calculate the exact angle needed to return the error
+   * 
+   * @param a the angle that is supposed to be at 0deg
+   * @param b the angle that is supposed to be at 180deg
+   * @return the error of the real reference frame and the wanted reference frame
+   */
   private static double fixAngle(double a, double b) {
     double diff = a - b;
     diff = (diff < 0) ? (diff + 360.0) : diff;
@@ -378,12 +421,14 @@ public class Robot {
     return diff;
   }
   /**
-   * Search the area with the data from wifi class
+   * Search the area corresponding to the right team to find the cart by going through the middle of the tiles and zigzagging
+   * by reaching the end of each row. Reorients the robot so it is perpendicular to the cart (more details at the method 
+   * orientPerpendicular())
    */
   public static void search() {
     
-    int xLength = SZ_UR_x - SZ_LL_x;
-    int yLength = SZ_UR_y - SZ_LL_y - 1;
+    double xLength = SZ_UR_x - SZ_LL_x;
+    double yLength = SZ_UR_y - SZ_LL_y - 1;
     
     Movement.turnTo(0.0);
     Movement.goForward(TILE_SIZE/2);
@@ -408,10 +453,14 @@ public class Robot {
   }
   
   /**
-   * Movement back to home area
+   * Goes back home by traveling to the bridge, through the bridge, back to the initial corner, then back to the initial position.
+   * Decides on how to go back towards the bridge according to where the initial corner is.
+   * Localizes with the light sensors after coming out of the bridge
    */
   public static void toHome() {
     
+    rightLightPoller.start();
+    leftLightPoller.start();
     if (direction == Direction.Horizontal) {
       //Island is on the left
       if (corner == 1 || corner == 2) {
@@ -504,18 +553,24 @@ public class Robot {
     Movement.turnBy(-90.0);
     Movement.goForward(TILE_SIZE - yBeginCoord);
     //Movement.stopMotors();
+    updateState(State.IDLE);
   }
   
-  /**
-   * Beeps specific amount times
-   */
+ /**
+  * Makes the robot beep a certain number of times
+  * 
+  * @param times number of beeps
+  */
   public static void beeps(int times) {
     for (int i = 0; i<times; i++) {
       Sound.beep();
     }
   }
   
-  public static void orientPerpendicular() {
+  /**
+   * Calculates the slope of the cart according to the robot's current orientation and moves the robot accordingly.
+   */
+  private static void orientPerpendicular() {
     double initDist;
     double finalDist;
     double diff;
@@ -571,18 +626,38 @@ public class Robot {
     return foundCart;
   }
   
+  /**
+   * Setting the beginning x coordinate
+   * 
+   * @param x in cm the x distance from the wall
+   */
   public static void setXBeginCoord(double x) {
     xBeginCoord = x;
   }
   
+  /**
+   * Getting the beginning x coordinate
+   * 
+   * @return the beginning x distance from the wall
+   */
   public static double getXBeginCoord() {
     return xBeginCoord;
   }
   
+  /**
+   * Setting the beginning y coordinate
+   * 
+   * @param y in cm the x distance from the wall
+   */
   public static void setYBeginCoord(double y) {
     yBeginCoord = y;
   }
   
+  /**
+   * Getting the beginning y coordinate
+   * 
+   * @return the beginning y distance from the wall
+   */
   public static double getYBeginCoord() {
     return yBeginCoord;
   }

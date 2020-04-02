@@ -4,7 +4,9 @@ import static ca.mcgill.ecse211.project.Resources.*;
 
 
 /**
- * The Movement class moves the robot in the grid according to the values in the odometer
+ * The Movement class is the only class that has access to the motors and performs all movement.
+ * Other classes use its static methods to move around.
+ * For example, rotating, traveling indefinitely, or traveling to a specific point.
  * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
@@ -18,7 +20,7 @@ public class Movement {
   final static double DEG_ERR = 2.0;
 
   /**
-   * Rotate the robot clockwise without stopping, nor resetting speeds
+   * Rotate the robot clockwise for forever and setting speed to ROTATE_SPEED in Resources
    */
   public static void rotateClockwise() {
     leftMotor.setSpeed(ROTATE_SPEED);
@@ -28,7 +30,7 @@ public class Movement {
   }
 
   /**
-   * Rotate the robot counter clockwise without stopping, nor resetting speeds
+   * Rotate the robot counter clockwise for forever and setting speed to ROTATE_SPEED in Resources
    */
   public static void rotateCounterClockwise() {
     leftMotor.setSpeed(ROTATE_SPEED);
@@ -38,7 +40,7 @@ public class Movement {
   }
 
   /**
-   * Move the robot forward for forever without resetting speeds
+   * Move the robot forward for forever and setting speed to FORWARD_SPEED's in Resources
    */
   public static void goForward() {
     leftMotor.setSpeed(FORWARD_SPEED_LEFT);
@@ -48,7 +50,7 @@ public class Movement {
   }
 
   /**
-   * Moves the robot backward for forever without resetting speeds
+   * Moves the robot backward for forever and setting speed to FORWARD_SPEED's in Resources
    */
   public static void moveBack() {
     leftMotor.setSpeed(FORWARD_SPEED_LEFT);
@@ -69,15 +71,20 @@ public class Movement {
   }
 
   /**
-   * Moves the robot to an inputed grid point
+   * Moves the robot to an inputed grid point by moving always on the gridlines.
+   * Continuously checks if the distance is reached to be able to pause the motion. Motion is paused if it is looking for
+   * an obstacle. Moving only takes into consideration the current location so even after avoiding, the method is able
+   * to readjust the trajectory.
    * <p>
-   * Continuously checks if the distance is reached to be able to pause the motion.
+   * This method also keeps the robot straight by making sure the two perpendicular lines on the sides are scanned at 
+   * the same time
    * 
-   * @param x x-coordinate
-   * @param y y-coordinate
-   * @param isNavigating false when the method is called to localize
+   * @param x x-coordinate in tile size coordinate
+   * @param y y-coordinate in tile size coordinate
+   * @param isLookingObstacles true when it is looking for obstacles, if it is true then it doesn't make sure the side
+   * perpendicular lines are scanned at the same time
    */
-  public static void travelTo(int x, int y, boolean isLookingObstacles) {
+  public static void travelTo(double x, double y, boolean isLookingObstacles) {
     double X = x * TILE_SIZE;
     double Y = y * TILE_SIZE;
 
@@ -88,8 +95,8 @@ public class Movement {
     double yDist = Y - CurY;
 
 
-    int xTileCount = Math.abs(x - odometer.gridpoint[0]);
-    int yTileCount = Math.abs(y - odometer.gridpoint[1]);
+    double xTileCount = Math.abs(x - odometer.gridpoint[0]);
+    double yTileCount = Math.abs(y - odometer.gridpoint[1]);
 
     turnTo(0);
 
@@ -178,6 +185,13 @@ public class Movement {
 
   }
 
+  /**
+   * Moving forward a set distance and scans for colours if there is an obstacle. If the scanned colour matches the 
+   * preset colours from the tape, then it is the cart and exits the method. Otherwise, it avoids the obstacle and continues
+   * traveling until distance is reached
+   * 
+   * @param distance in cm of how much the robot needs to move in straight line while avoiding if necessary
+   */
   public static void moveForwardSearch(double distance) {
     double CurX = odometer.getX();
     double CurY = odometer.getY();
@@ -217,7 +231,9 @@ public class Movement {
 
   
 
-
+  /**
+   * Turns the cart around and readjusts itself to lift the lift up with the cart
+   */
   public static void raiseCart() {
     goForward(-15.0);
     turnBy(180.0);
@@ -226,9 +242,9 @@ public class Movement {
   }
   
   /**
-   * TravelTo function to move the robot to the coordinates x and y in the coordinate system set by the odometer
-   * @param x the x coordinate
-   * @param y the y coordinate
+   * Moves the robot to a specific point in cm on the graph 
+   * @param x the x coordinate in cm
+   * @param y the y coordinate in cm
    */
   public static void travelTo(double x, double y) {
       
@@ -268,10 +284,11 @@ public class Movement {
   }
 
   /**
-   * Rotates the robot to a certain angle according to the reference frame Positive is in the clockwise direction
+   * Rotates the robot to a certain angle according to the reference frame. 
+   * Positive is in the clockwise direction
    * <i>Uses {@code turnBy(double)}</i>
    * 
-   * @param angle to turn to
+   * @param angle to turn to in degrees
    */
   public static void turnTo(double angle) {
     double rotationAngle;
@@ -290,7 +307,8 @@ public class Movement {
   }
 
   /**
-   * Turn the robot by a certain degrees. Clockwise is positive
+   * Turn the robot by a certain degrees.
+   * Positive is in the clockwise direction
    * 
    * @param angle the number of degrees the robot needs to rotate
    */
