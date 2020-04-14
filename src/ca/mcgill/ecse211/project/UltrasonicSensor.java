@@ -14,6 +14,7 @@ import static ca.mcgill.ecse211.project.Resources.*;
  * <li>Avoids obstacles
  * </ul>
  * <p>
+ *  @see <a href="https://www.dropbox.com/s/kyyfui0s3a2m7jj/SOFTWARE%20DOCUMENT.docx?dl=0">Software Documentation for more details</a>
  *
  * @author Xinyue Chen
  * @author Zheng Yu Cui
@@ -46,8 +47,10 @@ public class UltrasonicSensor {
 
   /**
    * Method to create a thread that will run while on the island to poll the distance from the Ultrasonic Distance
+   * <p>
+   * Poller is terminated when Robot.isLookingObstacles or Robot.isSearching is turned to false.
    */
-  public static void startUsSensorPoller() {
+  public static void usSensorPoller() {
     (new Thread() {
       public void run() {
         while (Robot.isLookingObstacles || Robot.isSearching) {
@@ -94,6 +97,19 @@ public class UltrasonicSensor {
   /**
    * Method to move the robot to the nearest intersection of tile lines using the ultrasonic sensor
    * and readjusts the 0deg by considering the starting corner
+   * Each starting corner has its own relative 0degrees because of the two walls orientation.
+   * 3--}      |         2
+   *           |         |
+   *           |         V
+   *           |
+   * __________|__________
+   *           |          
+   *           |
+   * A         |
+   * |         |
+   * 0         |     {-- 1  
+   * According to the starting corner, reset the 0 degrees while still storing the values so they are accessible when coming back.
+   * (More details in the software document)
    */
   public static void moveToOrigin() {
     // The x and y coordinates of (1,1) according to the current location of the robot
@@ -192,6 +208,12 @@ public class UltrasonicSensor {
   /**
    * Move the robot around an obstacle by avoiding from the rock's right side. Periodically checks if it came back to 
    * the same line it was on.
+   * <p>
+   * At every 4cm, the robot checks the perpendicular distance to the obstacle. If this distance is not infinity, then continue moving along the obstacle.
+   * If this distance is infinity then turns 90degrees and reiterates this algorithm.
+   * <p>
+   * Right when the robot's odometer reaches the initial x OR y, the avoiding is stopped
+   * and the robot continues on its way. This works because the navigation works by comparing continuously the current position and the final position.
    * 
    */
   public static void avoid() {

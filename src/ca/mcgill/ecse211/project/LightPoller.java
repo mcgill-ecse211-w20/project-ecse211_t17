@@ -9,6 +9,8 @@ import lejos.robotics.SampleProvider;
  * The LightPoller class has access to a lightsensor sample provider and is able to poll the current colour value.
  * Each LightPoller object is initialized with a sample provider and a sample mode and outputs the values accordingly.
  * 
+ * @see <a href="https://www.dropbox.com/s/kyyfui0s3a2m7jj/SOFTWARE%20DOCUMENT.docx?dl=0">Software Documentation for more details</a>
+ * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
  * @author Alixe Delabrousse

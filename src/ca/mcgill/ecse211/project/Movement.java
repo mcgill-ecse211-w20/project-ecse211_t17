@@ -8,6 +8,8 @@ import static ca.mcgill.ecse211.project.Resources.*;
  * Other classes use its static methods to move around.
  * For example, rotating, traveling indefinitely, or traveling to a specific point.
  * 
+ * @see <a href="https://www.dropbox.com/s/kyyfui0s3a2m7jj/SOFTWARE%20DOCUMENT.docx?dl=0">Software Documentation for more details</a>
+ * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
  * @author Alixe Delabrousse
@@ -77,7 +79,8 @@ public class Movement {
    * to readjust the trajectory.
    * <p>
    * This method also keeps the robot straight by making sure the two perpendicular lines on the sides are scanned at 
-   * the same time
+   * the same time. If one side detects the line first, then the corresponding motor is stopped and will not start again before
+   * the other side detects the line.
    * 
    * @param x x-coordinate in tile size coordinate
    * @param y y-coordinate in tile size coordinate
@@ -219,7 +222,7 @@ public class Movement {
   /**
    * Computes distance that needs to be traveled
    * 
-   * @param x Current x coordinate
+   * @param x Current x coordinate      
    * @param y Current y coordinate
    * @param zeroX Initial x coordinate
    * @param zeroY Initial y coordinate
@@ -237,7 +240,7 @@ public class Movement {
   public static void raiseCart() {
     goForward(-15.0);
     turnBy(180.0);
-    goForward(-14.0 - DETECTION_DISTANCE); //off by a cm from the cart to give some leeway
+    goForward(-14.0 + DETECTION_DISTANCE); //off by a cm from the cart to give some leeway
     raiseMotor.rotate(135, true);
   }
   

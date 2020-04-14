@@ -1,5 +1,16 @@
 package ca.mcgill.ecse211.project;
 
+/**
+ * Pseudo wifi class used in debugging and prior to the implementation of the wifi downloading
+ * 
+ * @see <a href="https://www.dropbox.com/s/kyyfui0s3a2m7jj/SOFTWARE%20DOCUMENT.docx?dl=0">Software Documentation for more details</a>
+ * @author Xinyue Chen
+ * @author Zheng Yu Cui
+ * @author Alixe Delabrousse
+ * @author David Kronish
+ * @author Ariane Leroux
+ *
+ */
 public class Wifi {
   
   /**

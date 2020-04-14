@@ -6,6 +6,8 @@ import static ca.mcgill.ecse211.project.Resources.*;
  * Class that has a reference to the colour light sensor to calibrate the initial colours and then detect which colours
  * it is using the mean and standard deviation for initial colours
  * 
+ * @see <a href="https://www.dropbox.com/s/kyyfui0s3a2m7jj/SOFTWARE%20DOCUMENT.docx?dl=0">Software Documentation for more details</a>
+ * 
  * @author Xinyue Chen
  * @author Zheng Yu Cui
  * @author Alixe Delabrousse

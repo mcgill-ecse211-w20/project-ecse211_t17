@@ -7,6 +7,8 @@ import lejos.hardware.Sound;
  * Static class that coordinates all actions by using the other resources.
  * Implemented using a state machine to help the pollers determining when they should stop.
  * 
+ * @see <a href="https://www.dropbox.com/s/kyyfui0s3a2m7jj/SOFTWARE%20DOCUMENT.docx?dl=0">Software Documentation for more details</a>
+ *
  * @author Xinyue Chen
  * @author Zheng Yu Cui
  * @author Alixe Delabrousse
@@ -98,7 +100,7 @@ public class Robot {
   
   
   /**
-   * Updates the current state of the robot object as well as the corresponding booleans
+   * Updates the current state of the robot object as well as the corresponding booleans    
    * 
    * @param newState - the new state of the device
    */
@@ -147,6 +149,13 @@ public class Robot {
   
   /**
    * Initializes the robot's position and imports all the wifi data
+   * <p>
+   * Verifies which team we are and initializes the general parameter in Resources accordingly.
+   * <ul>
+   *    <li>Tunnel LL and UR</li>
+   *    <li>Home LL and UR</li>
+   *    <li>Search Zone LL and UR</li>
+   * </ul>
    */
   public static void initialize() {
     
@@ -202,25 +211,53 @@ public class Robot {
    * Moves the robot to the search area by taking into consideration the orientation of the bridge and from which entrance
    * it should enter according to the imports from the Wifi class to the Resources class.
    * After exiting the bridge, localizes itself using the lightsensors
+   * <p>
+   * Finds the orientation of the bridge using the deltaX and deltaY of the segment connecting the the centre of the island and the centre of HOME.
+   * Although it works for most layouts of the map, the drawback remains that if the regions are marginal, this method only works if one side is longer than the other by 
+   * no more than 6 units. (Explained in more details in the software document) 
+   * <p>
+   * According to the starting corner, determine from which side the robot should approach the bridge. 
+   * <br>
+   * <ul>
+   *    <li>If vertical: approach from lower right OR upper right</li>
+   *    <li>If horizontal: approach from lower right OR lower left</li>
+   * </ul>
+   * <p>
+   * After going through the tunnel, the robot light localizes by using the turning on a corner method. The live localization
+   * during navigation is then turned off. However, the obstacle detection is on (without cart detection). The robot then moves to the lower left corner of the
+   * search zone to begin search.
    */
   public static void toSearch() {
     
+    double bridgeDiffX = TN_UR_x - TN_LL_x;
+    double bridgeDiffY = TN_UR_y - TN_LL_y;
     
-    double xCenterHome = (double)(HOME_LL_x + HOME_UR_x)/2.0;
-    double yCenterHome = (double)(HOME_LL_y + HOME_UR_y)/2.0;
-    double xCenterIsland = (double)(Wifi.Island_LL_x + Wifi.Island_UR_x)/2.0;
-    double yCenterIsland = (double)(Wifi.Island_LL_y + Wifi.Island_UR_y)/2.0;
     
-    double xDiff = xCenterHome - xCenterIsland;
-    double yDiff = yCenterHome - yCenterIsland;
-    
-    if (xDiff > yDiff) {
+    if (bridgeDiffX == 1 && bridgeDiffY == 1 ) {
+      
+      double xCenterHome = (double)(HOME_LL_x + HOME_UR_x)/2.0;
+      double yCenterHome = (double)(HOME_LL_y + HOME_UR_y)/2.0;
+      double xCenterIsland = (double)(Wifi.Island_LL_x + Wifi.Island_UR_x)/2.0;
+      double yCenterIsland = (double)(Wifi.Island_LL_y + Wifi.Island_UR_y)/2.0;
+      
+      double xDiff = xCenterHome - xCenterIsland;
+      double yDiff = yCenterHome - yCenterIsland;
+      
+      if (xDiff > yDiff) {
+        direction = Direction.Horizontal;
+        bridgeSize = TN_UR_x - TN_LL_x;
+      } else { //both when the xDiff is smaller and when its equal the bridge is vertical
+        direction = Direction.Vertical;
+        bridgeSize = TN_UR_y - TN_LL_y;
+      } 
+    } else if (bridgeDiffX > bridgeDiffY) {
       direction = Direction.Horizontal;
       bridgeSize = TN_UR_x - TN_LL_x;
-    } else { //both when the xDiff is smaller and when its equal the bridge is vertical
+    } else {
       direction = Direction.Vertical;
       bridgeSize = TN_UR_y - TN_LL_y;
-    } 
+    }
+    
     
     leftLightPoller.start();
     rightLightPoller.start();
@@ -302,7 +339,7 @@ public class Robot {
       }
     }
     
-    UltrasonicSensor.startUsSensorPoller();
+    UltrasonicSensor.usSensorPoller();
     Movement.travelTo(SZ_LL_x, SZ_LL_y, isLookingObstacles);
     updateState(State.SEARCHING);
     beeps(3);
@@ -372,7 +409,7 @@ public class Robot {
     }
     
     double thetaY = makeObtuse(Math.abs(avgAngles[0] - avgAngles[2]));
-    double thetaX = makeObtuse(Math.abs(rAngles[1] - rAngles[3]));
+    double thetaX = makeObtuse(Math.abs(avgAngles[1] - avgAngles[3]));
     double x= LIGHT_SENSOR_DISTANCE * Math.cos(Math.toRadians(thetaY/2));
     double y = LIGHT_SENSOR_DISTANCE * Math.cos(Math.toRadians(thetaX)/2);
     
@@ -421,8 +458,12 @@ public class Robot {
     return diff;
   }
   /**
+   * Search the area for the cart
+   * <p>
    * Search the area corresponding to the right team to find the cart by going through the middle of the tiles and zigzagging
-   * by reaching the end of each row. Reorients the robot so it is perpendicular to the cart (more details at the method 
+   * by reaching the end of each row. i.e. Robot goes to the end of every row then moves up by one TILE_SIZE then moves to the end of the second row and so on.
+   * <p>
+   * Reorients the robot so it is perpendicular to the cart (more details at the method 
    * orientPerpendicular())
    */
   public static void search() {
@@ -456,6 +497,9 @@ public class Robot {
    * Goes back home by traveling to the bridge, through the bridge, back to the initial corner, then back to the initial position.
    * Decides on how to go back towards the bridge according to where the initial corner is.
    * Localizes with the light sensors after coming out of the bridge
+   * <p>
+   * Depending if the bridge is vertical or horizontal AND the HOME corner, determine from which side to approach the bridge.
+   * The chosen algorithm is moving the robot to the left corner so,  lower left or upper right.
    */
   public static void toHome() {
     
@@ -569,6 +613,14 @@ public class Robot {
   
   /**
    * Calculates the slope of the cart according to the robot's current orientation and moves the robot accordingly.
+   * <p>
+   * Determines current distance to the cart, move perpendicularly up from the current orientation for 8cm, and measure the distance to the cart again.
+   * Using arctan(diff/8.0) determine the angle at which the robot should turn to
+   * <p>
+   * If the distance is infinity, then goes 16.0cm in the opposite direction from the current position and measure the distance there.
+   * Similarly, using arctan, determine the angle
+   * <p>
+   * After finding the angle, the robot chooses from which height to backup. This is to avoid bumping into the cart while backing up, so the height will be where there is the biggest distance from the two measurements
    */
   private static void orientPerpendicular() {
     double initDist;
